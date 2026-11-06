@@ -11,7 +11,6 @@ function logKey(kind, id, t, part) {
 // In duets each key also belongs to a part (left hand = bottom line, right hand = top line).
 const partHeld = p => [...G.keys.values()].some(k => k.p === p) || G.demoHeld[p];
 function press(id, hint = 0) {
-  if (mode === 'calib') return calibPress();
   if (mode !== 'play' || !G || G.state !== 'play' || G.demo || G.keys.has(id)) return;
   const p = G.nparts > 1 ? hint : 0;
   const t = tp(); G.keys.set(id, { t, p }); logKey('down', id, t, p);

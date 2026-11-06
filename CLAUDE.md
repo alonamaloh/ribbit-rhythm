@@ -21,7 +21,7 @@ shared doc: "Ribbit Rhythm: Game Design Plan" on claude.ai. Ask the user for the
   - `state.js` the run `G`, plants, `startFrom`, frog positions · `input.js` `press`/`release`
   - `melody.js` `pickMelody` · `judge.js` `hit`, `failNow`, `finish` · `scheduler.js` `schedule`, `update`
   - `scene.js` canvas setup, pond, pads, frogs, fish, plants · `notation.js` the notation card
-  - `render.js` band and `render()` · `menus.js` overlays, pond map, settings, sync check, key/touch wiring
+  - `render.js` band and `render()` · `menus.js` overlays, pond map, settings, key/touch wiring
   - `main.js` starts the frame loop and builds the menu
 - `tests/` - automated "players" that drive the game in a headless browser (Playwright) and
   report failures. See Testing below.

@@ -1,11 +1,11 @@
-// Menus, overlays, settings, sync check, input wiring
+// Menus, overlays, settings, input wiring
 'use strict';
 
 // =====================================================================
 //  UI / overlays
 // =====================================================================
 const $ = id => document.getElementById(id);
-const overlays = ['menu', 'intro', 'results', 'settings', 'calib'];
+const overlays = ['menu', 'intro', 'results', 'settings'];
 const isTouch = () => (navigator.maxTouchPoints || 0) > 0 || matchMedia('(pointer: coarse)').matches;
 function show(name) {
   overlays.forEach(o => $(o).classList.toggle('show', o === name));
@@ -175,7 +175,7 @@ function timingLog() {
   return [
     'Ribbit Rhythm timing log v1',
     `level ${g.L.id} "${g.L.name}"  bpm ${g.bpm.toFixed(1)}  sec/beat ${g.spb.toFixed(4)}  beats/measure ${g.beats}  guide ${guideOf(g.L)}`,
-    `audio latency ${(hwLatency() * 1000).toFixed(0)} ms  calibration ${(settings.calib * 1000).toFixed(0)} ms  windows early ${EARLY_WIN}s late ${LATE_WIN}s perfect ${PERFECT}s`,
+    `audio latency ${(hwLatency() * 1000).toFixed(0)} ms  windows early ${EARLY_WIN}s late ${LATE_WIN}s perfect ${PERFECT}s`,
     `browser ${navigator.userAgent}`,
     `rhythm  ${g.rhythmStr}`,
     'times are seconds after beat 1 of measure 1 (as heard), D = key down, U = key up, ! = would have failed',
@@ -232,7 +232,6 @@ function showResults() {
 function syncSettingsUI() {
   $('setPractice').checked = settings.practice; $('setCounts').checked = settings.counts; $('setCricket').checked = settings.cricket;
   $('setSpeed').value = String(settings.speed); $('setGuide').value = settings.guide;
-  $('setCalib').textContent = `${Math.round(settings.calib * 1000)} ms (use “Sync check” to tune)`;
 }
 $('btnSettings').onclick = () => { syncSettingsUI(); mode = 'settings'; show('settings'); };
 $('setCounts').onchange = e => { settings.counts = e.target.checked; saveJSON('lilyRhythm.settings', settings); };
@@ -242,50 +241,19 @@ $('setPractice').onchange = e => { settings.practice = e.target.checked; saveJSO
 $('setGuide').onchange = e => { settings.guide = e.target.value; saveJSON('lilyRhythm.settings', settings); };
 $('btnSetDone').onclick = goMenu;
 
-// calibration
-let CAL = null;
-$('btnCalib').onclick = () => { mode = 'calib'; CAL = null; $('calibText').innerHTML = 'Press any key (or tap the screen) on every cricket chirp. This tunes the game to your speakers.'; show('calib'); };
-$('btnCalibClose').onclick = () => { CAL = null; goMenu(); };
-$('btnCalibStart').onclick = () => {
-  ensureAudio(); if (document.activeElement) document.activeElement.blur();
-  const spb = 60 / 90, n = 14, start = AC.currentTime + 0.6;
-  CAL = { spb, n, start, taps: [] };
-  for (let k = 0; k < n; k++) SND.cricket(start + k * spb, k % 4 === 0, true);
-  $('calibText').textContent = 'Tap along with the chirps…';
-  const pulse = () => {
-    if (!CAL) return;
-    const ph = (AC.currentTime - hwLatency() - CAL.start) / CAL.spb;
-    $('calibCircle').style.transform = ph >= 0 && ph < CAL.n ? `scale(${1 + 0.25 * Math.max(0, 1 - (ph % 1) * 4)})` : 'scale(1)';
-    if (ph < CAL.n + 0.8) requestAnimationFrame(pulse); else finishCalib();
-  };
-  requestAnimationFrame(pulse);
-};
-function calibPress() {
-  if (!CAL) return;
-  const t = AC.currentTime - hwLatency(), k = Math.round((t - CAL.start) / CAL.spb);
-  if (k >= 3 && k < CAL.n) CAL.taps.push(t - (CAL.start + k * CAL.spb));
-}
-function finishCalib() {
-  const taps = CAL.taps.slice().sort((a, b) => a - b); CAL = null;
-  if (taps.length < 5) { $('calibText').textContent = 'Not enough taps. Press Start to try again!'; return; }
-  const med = taps[Math.floor(taps.length / 2)];
-  settings.calib = clamp(med, -0.1, 0.3); saveJSON('lilyRhythm.settings', settings);
-  $('calibText').innerHTML = `All set! Your timing offset is <b>${Math.round(settings.calib * 1000)} ms</b>. Press Start to test again, or Close.`;
-}
-
 // input wiring: any letter, number, Space, Enter or arrow key hops
 const isHopKey = e => !e.ctrlKey && !e.metaKey && !e.altKey &&
   (e.key.length === 1 || e.key === 'Enter' || e.key.startsWith('Arrow'));
 addEventListener('keydown', e => {
   if (e.code === 'Escape' && mode === 'play') { openIntro(selected, true); return; }
   if (!isHopKey(e)) return;
-  if (mode === 'play' || mode === 'calib') { e.preventDefault(); if (!e.repeat) press('k:' + e.code, partForCode(e.code)); }
+  if (mode === 'play') { e.preventDefault(); if (!e.repeat) press('k:' + e.code, partForCode(e.code)); }
   else if (mode === 'intro' && e.code === 'Space') { e.preventDefault(); if (!e.repeat) startPlay(false); }
 });
-addEventListener('keyup', e => { if (mode === 'play' || mode === 'calib') { if (isHopKey(e)) e.preventDefault(); release('k:' + e.code); } });
+addEventListener('keyup', e => { if (mode === 'play') { if (isHopKey(e)) e.preventDefault(); release('k:' + e.code); } });
 stage.addEventListener('pointerdown', e => {
   if (e.target.closest('button, select, input')) return;
-  if (mode === 'play' || mode === 'calib') {
+  if (mode === 'play') {
     e.preventDefault();
     const zone = e.target.closest('.tapzone');
     if (zone) { zone.classList.add('down'); zoneOf.set(e.pointerId, zone); }

@@ -43,5 +43,4 @@
   .row { display: flex; align-items: center; justify-content: space-between; gap: 20px; font-size: 19px; margin: 12px 0; text-align: left; }
   .row select, .row input[type=checkbox] { font: inherit; font-size: 18px; transform-origin: right center; }
   .row input[type=checkbox] { width: 24px; height: 24px; }
-  #calibCircle { width: 130px; height: 130px; border-radius: 50%; background: #7fd45e; border: 5px solid #2b3a2e; margin: 16px auto; transition: transform .08s; }
   .small { font-size: 15px; color: #5d6b5f; }

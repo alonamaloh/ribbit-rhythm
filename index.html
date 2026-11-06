@@ -17,7 +17,6 @@
     <svg id="pondmap" viewBox="0 0 1100 620" width="1100" height="620"></svg>
     <div id="menuButtons">
       <button class="rock" id="btnSettings">⚙️ Settings</button>
-      <button class="rock" id="btnCalib">🎧 Sync check</button>
     </div>
   </div>
 
@@ -54,20 +53,7 @@
         <select id="setSpeed"><option value="0.8">🐢 Slow</option><option value="1">🐸 Normal</option><option value="1.2">🐇 Fast</option></select></div>
       <div class="row"><span>Reading guide</span>
         <select id="setGuide"><option value="auto">Grows with levels</option><option value="full">👀 Always show the line</option><option value="ears">👂 Ears only, every level</option></select></div>
-      <div class="row"><span>Timing offset</span><span id="setCalib" class="small"></span></div>
       <button class="go" id="btnSetDone">Done</button>
-    </div>
-  </div>
-
-  <div id="calib" class="overlay dim">
-    <div class="panel" style="width: 560px;">
-      <h2>Sync check</h2>
-      <div class="tip" id="calibText">Press any key (or tap the screen) on every cricket chirp. This tunes the game to your speakers.</div>
-      <div id="calibCircle"></div>
-      <div>
-        <button class="go" id="btnCalibStart">Start</button>
-        <button class="soft" id="btnCalibClose">Close</button>
-      </div>
     </div>
   </div>
 </div>

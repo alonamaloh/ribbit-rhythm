@@ -4,7 +4,7 @@
 // =====================================================================
 //  Game state
 // =====================================================================
-let mode = 'menu';      // menu | intro | play | results | settings | calib
+let mode = 'menu';      // menu | intro | play | results | settings
 let G = null;           // current run / preview
 let selected = 0, pendingRhythm = null;
 let camB = 0;           // smoothed camera beat

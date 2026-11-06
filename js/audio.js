@@ -18,7 +18,7 @@ function ensureAudio() {
   if (AC.state !== 'running') AC.resume().catch(() => {});
 }
 const hwLatency = () => (AC.outputLatency || 0) + (AC.baseLatency || 0);
-const tp = () => AC.currentTime - hwLatency() - settings.calib;   // "perceived" time
+const tp = () => AC.currentTime - hwLatency();   // "perceived" time (when the sound reaches the ears)
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
 
 function tone(type, f0, t, dur, peak, { a = 0.005, f1 = null, glide = 0.05, dest = master, q = null } = {}) {
@@ -40,6 +40,37 @@ function noise(t, dur, peak, type, f0, f1) {
   const g = AC.createGain();
   g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   s.connect(fl); fl.connect(g); g.connect(master); s.start(t); s.stop(t + dur + 0.05);
+}
+// A frog croak is a fast train of little clicks from the vocal sac, each one ringing briefly
+// (that's the rattle). "bit" is a fifth higher than "rib" (BIT_UP, try 1.33 for a fourth).
+// "rib" fades as the lips close on the "b"; "bit" stops short on the "t". mul < 1 = bigger, lower frog.
+const BIT_UP = 1.5;
+// how much higher than a big bullfrog: 4 = two octaves; CROAK_CLICKS speeds up the rattle (1 = slow, croaky)
+const CROAK_PITCH = 4, CROAK_CLICKS = 1;
+function croakSamples(sr, mul = 1, pitch = CROAK_PITCH, clicks = CROAK_CLICKS) {
+  const out = new Float32Array(Math.ceil(sr * 0.34));
+  let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  // [start s, length s, click rate from -> to (per second), ring pitch from -> to (Hz), fade-out part]
+  const syllables = [[0, 0.12, 58, 62, 500, 470, 0.35], [0.15, 0.15, 70, 74, 500 * BIT_UP, 480 * BIT_UP, 0.1]];
+  for (const [st, d, r0, r1, f0, f1, fade] of syllables) {
+    let t = 0;
+    while (t < d) {
+      const x = t / d, rate = (r0 + (r1 - r0) * x) * Math.sqrt(mul) * clicks, f = (f0 + (f1 - f0) * x) * mul * pitch;
+      // loudness: quick start, a little swell, then fade out
+      const env = Math.min(1, x / 0.1) * (x > 1 - fade ? (1 - x) / fade : 1) * (0.85 + 0.3 * Math.sin(Math.PI * x));
+      const amp = env * (0.8 + 0.4 * rnd());   // clicks aren't all the same size: sounds alive
+      const i0 = Math.round((st + t) * sr), len = Math.round(0.016 / clicks * sr);
+      for (let k = 0; k < len && i0 + k < out.length; k++) {
+        const u = k / sr, ring = Math.exp(-u / (0.0042 / clicks));
+        out[i0 + k] += amp * ring * (Math.sin(2 * Math.PI * f * u) + 0.5 * Math.sin(2 * Math.PI * f * 2.3 * u + 1) +
+          0.6 * Math.sin(2 * Math.PI * f * 0.5 * u)) + amp * 0.25 * (rnd() * 2 - 1) * Math.exp(-u / (0.0008 / clicks));
+      }
+      t += (1 / rate) * (0.93 + 0.14 * rnd());   // slightly uneven, like a real throat
+    }
+  }
+  let peak = 0; for (const s of out) peak = Math.max(peak, Math.abs(s));
+  for (let i = 0; i < out.length; i++) out[i] /= peak || 1;
+  return out;
 }
 const SND = {
   cricket(t, accent, loud) {
@@ -74,18 +105,13 @@ const SND = {
   bleh(t) { tone('sawtooth', 240, t, 0.25, 0.12, { f1: 150, glide: 0.25, q: 1200 }); },
   slip(t) { tone('sine', 700, t, 0.4, 0.15, { f1: 140, glide: 0.4 }); },
   oops(t) { tone('square', 330, t, 0.06, 0.05, { q: 1500 }); },
-  // "rib-bit": two buzzy syllables (a rattling vocal-sac sound) with a falling pitch
+  // "rib-bit": two croaks, played from a sound made once in code (see croakSamples)
   ribbit(t, mul = 1, v = 0.32) {
-    for (const [st, d, f] of [[0, 0.09, 1], [0.15, 0.14, 0.82]]) {
-      const at = t + st, o = AC.createOscillator(), bp = AC.createBiquadFilter(), g = AC.createGain();
-      o.type = 'sawtooth'; o.frequency.setValueAtTime(230 * mul * f, at); o.frequency.exponentialRampToValueAtTime(150 * mul * f, at + d);
-      bp.type = 'bandpass'; bp.frequency.value = 950 * mul; bp.Q.value = 2.2;
-      g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(v, at + 0.012); g.gain.setValueAtTime(v, at + d - 0.03); g.gain.linearRampToValueAtTime(0.0001, at + d);
-      const lfo = AC.createOscillator(), lg = AC.createGain(); lfo.type = 'square'; lfo.frequency.value = 42; lg.gain.value = v * 0.8;
-      lfo.connect(lg); lg.connect(g.gain);
-      o.connect(bp); bp.connect(g); g.connect(master);
-      o.start(at); lfo.start(at); o.stop(at + d + 0.02); lfo.stop(at + d + 0.02);
-    }
+    const key = 'croak' + mul;
+    if (!SND[key]) { const d = croakSamples(AC.sampleRate, mul); SND[key] = AC.createBuffer(1, d.length, AC.sampleRate); SND[key].getChannelData(0).set(d); }
+    const s = AC.createBufferSource(), g = AC.createGain();
+    s.buffer = SND[key]; g.gain.value = v * 1.1;
+    s.connect(g); g.connect(master); s.start(t);
   },
   // ---- Pond Band instruments ----
   kick(t, v = 0.55) {
