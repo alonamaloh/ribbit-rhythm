@@ -46,8 +46,10 @@ shared doc: "Ribbit Rhythm: Game Design Plan" on claude.ai. Ask the user for the
   left tap pad = bottom line (part 1); everything else = top line (part 0).
 - **Audio**: Web Audio, all synthesized (`SND` object). `schedule()` plays the band in
   half-beat steps ahead of time; `chordFor(m)` gives C Am F G and a G -> C cadence at the end.
-  `pickMelody()` makes the note each hop plays (chord tones on strong beats, passing notes on
-  weak beats, approach notes into the next bar, as tendencies, not fixed rules).
+  `pickMelody()` makes the note each hop plays: chord tones, except that a weak note between two
+  stronger notes (strong-weak-strong, e.g. `q q q`, `e e q`, `h q h` in 3/4) is often a passing
+  note stepping from one chord tone to the next. The last note is C. No approach notes for now.
+  The bass walk-up into the next bar is left out of the last bar.
 - **Rendering**: canvas 1100x620 scaled to fit. `render()` draws background, a row of pads per
   part, frogs, fish, plants, fog, band, then the notation card (`drawNotation`, `drawPageLines`).
 - **Menus**: level map is an SVG pond (`buildMenu`), with HTML overlays for intro/results/settings.

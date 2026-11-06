@@ -14,8 +14,7 @@ function hit(n, q, t, dt = 0) {
   const now = AC.currentTime;
   SND.hop(now);
   const pick = pickMelody(n, p);
-  if (pick !== G.melLast[p]) G.melDir[p] = pick > G.melLast[p] ? 1 : -1;
-  G.melLast[p] = pick; SND.marimba(now, pick, p === 1 ? 0.36 : 0.32);
+  G.melLast[p] = pick; G.melNote[p] = n; SND.marimba(now, pick, p === 1 ? 0.36 : 0.32);
   if (G.log && settings.practice) G.log.push(`   note   ${pick}`);   // plays exactly when the player taps
   // Coaching: coming in early right after a long note usually means the long note was cut short.
   const prevE = prevInPart(n);

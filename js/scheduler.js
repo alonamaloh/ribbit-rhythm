@@ -21,10 +21,10 @@ function schedule() {
         if (inBar === 1 || inBar === 3) SND.snare(at);
       }
     }
-    // 🎸 bass line: root, root, fifth, octave, and a walk-up into the next chord
+    // 🎸 bass line: root, root, fifth, octave, and a walk-up into the next chord (none in the last bar: nothing comes next)
     if (band >= 2) {
       const r = ch[0], pat = band === 2 ? [[0, r, 1.8], [2, r + 7, 1.8]] : waltz ? [[0, r, 0.9], [1, r + 7, 0.45], [2, r + 12, 0.45]]
-        : [[0, r, 0.9], [1.5, r, 0.4], [2, r + 7, 0.9], [3, r + 12, 0.45], [3.5, nextCh[0] + (nextCh[0] > r ? -1 : 1), 0.4]];
+        : [[0, r, 0.9], [1.5, r, 0.4], [2, r + 7, 0.9], [3, r + 12, 0.45]].concat(m === G.measures - 1 ? [] : [[3.5, nextCh[0] + (nextCh[0] > r ? -1 : 1), 0.4]]);
       for (const [pos, note, d] of pat) if (Math.abs(inBar - pos) < 1e-6) SND.bassNote(at, note, d * spb);
     }
     // 🎤 choir: a chord for the whole measure, "ooh" and "aah" taking turns every 4 bars

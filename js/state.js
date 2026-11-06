@@ -79,7 +79,7 @@ function makeRun(idx, demo, rhythmStr) {
     noteKeys: Array(np).fill(null), demoHeld: Array(np).fill(false), demoRelease: Array(np).fill(0),
     frogs: Array.from({ length: np }, () => ({ on: null, hopStart: null, squashT: -9, wobT: -9 })), fails: 0, combo: 0, maxCombo: 0,
     clumps: L.plants ? makeClumps(L, parsed[0].total, np) : null,
-    pops: [], parts: [], fail: null, nextHalf: 0, melLast: [72, 55], melDir: [1, 1], doneT: 0,
+    pops: [], parts: [], fail: null, nextHalf: 0, melLast: [72, 55], melNote: [null, null], melPass: [null, null], doneT: 0,
   };
 }
 const evT0 = e => G.songStart + e.beat * G.spb;
