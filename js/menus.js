@@ -217,7 +217,7 @@ function showResults() {
     const perfect = notes.filter(e => e.judged === 'perfect').length, good = notes.length - perfect;
     const stars = G.fails === 0 ? (perfect / notes.length >= 0.5 ? 3 : 2) : (G.fails === 1 ? 2 : 1);
     if (stars > (progress.best[G.L.id] || 0)) { progress.best[G.L.id] = stars; saveJSON('lilyRhythm.progress', progress); }
-    $('resTitle').textContent = ['', 'You made it across!', 'Great hopping!', 'Perfect pond!'][stars];
+    $('resTitle').textContent = resultTitle(G.L, stars);
     $('resStars').textContent = starStr(stars);
     $('resStats').innerHTML = `<span>✨ Perfect: <b>${perfect}</b></span><span>👍 Good: <b>${good}</b></span><span>🐟 Oopsies: <b>${G.fails}</b></span>`;
     add('🔁 Again', 'soft', () => startPlay(false));
