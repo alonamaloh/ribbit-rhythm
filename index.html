@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Ribbit Rhythm</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <button id="quit" class="soft">✕ Stop</button>
+  <div id="tapL" class="tapzone left" data-part="1"><b>L</b><span>bottom line</span></div>
+  <div id="tapR" class="tapzone" data-part="0"><b>TAP</b><span>hold for long notes</span></div>
+
+  <div id="menu" class="overlay show">
+    <svg id="pondmap" viewBox="0 0 1100 620" width="1100" height="620"></svg>
+    <div id="menuButtons">
+      <button class="rock" id="btnSettings">⚙️ Settings</button>
+      <button class="rock" id="btnCalib">🎧 Sync check</button>
+    </div>
+  </div>
+
+  <div id="intro" class="overlay">
+    <div class="panel">
+      <h2 id="introName">Level</h2>
+      <div class="small" id="introMeta"></div>
+      <div class="tip" id="introTip"></div>
+      <div>
+        <button class="listen" id="btnListen">👂 Listen first</button>
+        <button class="go" id="btnPlay">▶ Play!</button>
+        <button class="soft" id="btnBack">← Levels</button>
+      </div>
+      <div class="keys">Press <b>any key</b> or tap the screen on each note · <b>Hold</b> long notes · Do nothing on rests<br>Tip: use two keys (like <b>F</b> and <b>J</b>) and take turns, just like legato on a piano 🎹</div>
+    </div>
+  </div>
+
+  <div id="results" class="overlay dim">
+    <div class="panel" style="min-width: 520px;">
+      <h2 id="resTitle">Pond cleared!</h2>
+      <div class="bigstars" id="resStars">★★★</div>
+      <div class="stats" id="resStats"></div>
+      <div id="resButtons"></div>
+    </div>
+  </div>
+
+  <div id="settings" class="overlay dim">
+    <div class="panel" style="width: 520px;">
+      <h2>Settings</h2>
+      <div class="row"><span>Show counting (1 2 3 4)</span><input type="checkbox" id="setCounts"></div>
+      <div class="row"><span>Cricket metronome</span><input type="checkbox" id="setCricket"></div>
+      <div class="row"><span>Practice mode<br><span class="small">Never fail. Records every tap so the timing can be tuned.</span></span><input type="checkbox" id="setPractice"></div>
+      <div class="row"><span>Speed</span>
+        <select id="setSpeed"><option value="0.8">🐢 Slow</option><option value="1">🐸 Normal</option><option value="1.2">🐇 Fast</option></select></div>
+      <div class="row"><span>Reading guide</span>
+        <select id="setGuide"><option value="auto">Grows with levels</option><option value="full">👀 Always show the line</option><option value="ears">👂 Ears only, every level</option></select></div>
+      <div class="row"><span>Timing offset</span><span id="setCalib" class="small"></span></div>
+      <button class="go" id="btnSetDone">Done</button>
+    </div>
+  </div>
+
+  <div id="calib" class="overlay dim">
+    <div class="panel" style="width: 560px;">
+      <h2>Sync check</h2>
+      <div class="tip" id="calibText">Press any key (or tap the screen) on every cricket chirp. This tunes the game to your speakers.</div>
+      <div id="calibCircle"></div>
+      <div>
+        <button class="go" id="btnCalibStart">Start</button>
+        <button class="soft" id="btnCalibClose">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/levels.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/rhythm.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/state.js"></script>
+<script src="js/input.js"></script>
+<script src="js/melody.js"></script>
+<script src="js/judge.js"></script>
+<script src="js/scheduler.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/notation.js"></script>
+<script src="js/render.js"></script>
+<script src="js/menus.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

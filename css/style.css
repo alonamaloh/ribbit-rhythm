@@ -1,0 +1,47 @@
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #cdeedd; overscroll-behavior: none;
+    font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", "Trebuchet MS", system-ui, sans-serif; color: #2b3a2e; }
+  #stage { position: fixed; left: 0; top: 0; width: 1100px; height: 620px; transform-origin: 0 0; user-select: none; -webkit-user-select: none; touch-action: none; -webkit-touch-callout: none; }
+  html, body { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+  canvas { position: absolute; left: 0; top: 0; width: 1100px; height: 620px; display: block; border-radius: 18px; }
+  .overlay { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; border-radius: 18px; }
+  .overlay.show { display: flex; }
+  .dim { background: rgba(30, 60, 50, 0.35); }
+  .panel { background: #fff8ea; border: 4px solid #2b3a2e; border-radius: 26px; box-shadow: 0 8px 0 #2b3a2e33; padding: 26px 32px; text-align: center; }
+  h1 { margin: 0; font-size: 46px; letter-spacing: 0.5px; color: #2f7a3a; }
+  h2 { margin: 0 0 6px; font-size: 32px; color: #2f7a3a; }
+  .sub { margin: 4px 0 16px; font-size: 18px; color: #5d6b5f; }
+  button { font: inherit; font-weight: 700; font-size: 19px; border: 3px solid #2b3a2e; border-radius: 16px; padding: 10px 18px;
+    background: #ffffff; color: #2b3a2e; cursor: pointer; box-shadow: 0 4px 0 #2b3a2e; margin: 6px; transition: transform .06s; }
+  button:active { transform: translateY(3px); box-shadow: 0 1px 0 #2b3a2e; }
+  button.go { background: #7fd45e; }
+  button.listen { background: #ffd66b; }
+  button.soft { background: #e8f3ff; }
+  #pondmap { position: absolute; inset: 0; border-radius: 18px; }
+  #menuButtons { position: absolute; right: 22px; top: 22px; display: flex; flex-direction: column; align-items: flex-end; }
+  button.rock { background: #c9d1cf; border-radius: 26px 22px 28px 20px; font-size: 16px; padding: 8px 16px; }
+  .pad { cursor: pointer; }
+  .pad .padBody { transition: transform .15s; transform-box: fill-box; transform-origin: center; }
+  .pad:hover .padBody, .pad:focus .padBody { transform: scale(1.07); }
+  .pad:focus { outline: none; }
+  #intro .panel { margin-top: 150px; max-width: 640px; }
+  .tip { font-size: 21px; margin: 8px 0 14px; line-height: 1.35; }
+  .keys { font-size: 15px; color: #5d6b5f; margin-top: 10px; }
+  .bigstars { font-size: 64px; color: #f0a800; letter-spacing: 6px; margin: 4px 0; }
+  .stats { font-size: 19px; margin: 6px 0 14px; display: flex; gap: 22px; justify-content: center; }
+  .tapzone { position: absolute; display: none; flex-direction: column; align-items: center; justify-content: center;
+    width: 250px; height: 132px; bottom: 14px; right: 18px; border-radius: 50%;
+    background: rgba(105, 196, 87, 0.55); border: 4px solid rgba(255,255,255,0.9); box-shadow: 0 6px 0 rgba(43,58,46,0.35);
+    color: #fff; text-shadow: 0 2px 0 rgba(43,58,46,0.5); transition: transform .05s, background .05s; touch-action: none; }
+  .tapzone b { font-size: 40px; line-height: 1; } .tapzone span { font-size: 15px; font-weight: 800; margin-top: 4px; }
+  .tapzone.left { right: auto; left: 18px; background: rgba(110, 190, 240, 0.6); }
+  .tapzone.show { display: flex; }
+  .tapzone.down { transform: scale(0.94) translateY(4px); box-shadow: 0 2px 0 rgba(43,58,46,0.35); background: rgba(105, 196, 87, 0.85); }
+  .tapzone.left.down { background: rgba(110, 190, 240, 0.9); }
+  #quit { position: absolute; right: 22px; top: 170px; display: none; padding: 6px 12px; font-size: 16px; }
+  #quit.show { display: block; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 20px; font-size: 19px; margin: 12px 0; text-align: left; }
+  .row select, .row input[type=checkbox] { font: inherit; font-size: 18px; transform-origin: right center; }
+  .row input[type=checkbox] { width: 24px; height: 24px; }
+  #calibCircle { width: 130px; height: 130px; border-radius: 50%; background: #7fd45e; border: 5px solid #2b3a2e; margin: 16px auto; transition: transform .08s; }
+  .small { font-size: 15px; color: #5d6b5f; }
