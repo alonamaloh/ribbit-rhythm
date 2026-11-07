@@ -9,11 +9,27 @@ const SCALE = [0, 2, 4, 5, 7, 9, 11];   // C major
 const pc = m => ((m % 12) + 12) % 12;
 const inScale = m => SCALE.includes(pc(m));
 const isTone = (m, chord) => chord.some(c => pc(m - c) === 0);
+// Melodies use a random generator seeded from the level and its rhythm, so the same rhythm always
+// gets the same tune: after an oopsie the bars replay with the same notes, and so does a replay.
+let melRnd = Math.random;
+function seededRandom(text) {
+  let h = 2166136261; for (const c of text) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0;
+  return () => { h = (h + 0x6D2B79F5) >>> 0; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+// Compose the whole melody when a run is set up: each note gets its pitch (n.pitch) ahead of time.
+function planMelody() {
+  melRnd = seededRandom(G.L.id + '|' + G.rhythmStr);
+  for (const n of G.events) {
+    if (n.type !== 'note') continue;
+    const p = n.part; n.pitch = pickMelody(n, p); G.melLast[p] = n.pitch; G.melNote[p] = n;
+  }
+  melRnd = Math.random;
+}
 function nearestOf(list, ref, avoid, exact = false) {
   const l = list.filter(m => m !== avoid);
   const pool = (l.length ? l : list).slice().sort((a, b) => Math.abs(a - ref) - Math.abs(b - ref));
   // a little variety: usually the closest, sometimes the second closest
-  return pool[!exact && pool.length > 1 && Math.random() < 0.3 ? 1 : 0];
+  return pool[!exact && pool.length > 1 && melRnd() < 0.3 ? 1 : 0];
 }
 // How strong a spot in the bar is: 3 = beat 1, 2 = beat 3 in 4/4, 1 = other beats, 0 = "&"s
 function strength(beat) {
@@ -48,13 +64,13 @@ function pickMelody(n, p) {
   // and the note before is the one we just played
   const s = strength(n.beat);
   if (prev && next && prev.type === 'note' && next.type === 'note' && G.melNote[p] === prev &&
-      strength(prev.beat) > s && strength(next.beat) > s && Math.random() < 0.75) {
+      strength(prev.beat) > s && strength(next.beat) > s && melRnd() < 0.75) {
     // a passing note is one scale step from the last note, with the next chord tone one more step on
     const targets = targetsOf(next);
     const ways = [1, -1].map(d => ({ pass: scaleStep(last, d), to: scaleStep(scaleStep(last, d), d) }))
       .filter(w => w.pass >= lo && w.pass <= hi && targets.includes(w.to));
     if (ways.length) {
-      const w = ways[Math.floor(Math.random() * ways.length)];
+      const w = ways[Math.floor(melRnd() * ways.length)];
       G.melPass[p] = { note: next, pitch: w.to };
       return w.pass;
     }

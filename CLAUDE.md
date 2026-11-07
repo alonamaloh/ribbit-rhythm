@@ -17,12 +17,16 @@ shared doc: "Ribbit Rhythm: Game Design Plan" on claude.ai. Ask the user for the
   `file://` still works and the tests can reach `G`, `press`, `failNow`... directly). Load order
   matters only for code that runs at load time; keep `main.js` last.
   - `levels.js` constants, timing rules, chords, `LEVELS` · `storage.js` settings/progress
+  - `habitats.js` `HABITATS` (which levels live where, in play order; band style; shop yes/no) and `THEMES` (colours)
   - `rhythm.js` parsing and random rhythms · `audio.js` Web Audio and `SND`
   - `state.js` the run `G`, plants, `startFrom`, frog positions · `input.js` `press`/`release`
   - `melody.js` `pickMelody` · `judge.js` `hit`, `failNow`, `finish` · `scheduler.js` `schedule`, `update`
   - `scene.js` canvas setup, pond, pads, frogs, fish, plants · `notation.js` the notation card
   - `render.js` band and `render()` · `menus.js` overlays, pond map, settings, key/touch wiring
   - `messages.js` results-screen titles (general by stars, plus some per level): plain lists, easy to edit
+  - `rewards.js` flowers and stars earned per run, wallet · `world.js` world map of habitats + home
+  - `items.js` `ITEMS` (shop, price, slot type, drawing) · `shop.js` the shop screen
+  - `home.js` `SLOTS` and the garden/room screens · `savecode.js` save codes (`CODE_LEVELS`, format)
   - `main.js` starts the frame loop and builds the menu
 - `tests/` - automated "players" that drive the game in a headless browser (Playwright) and
   report failures. See Testing below.
@@ -34,6 +38,18 @@ shared doc: "Ribbit Rhythm: Game Design Plan" on claude.ai. Ask the user for the
   'page' two-line sliding view), optional `beats` (3 for 3/4), `ppb` (pixels per beat),
   `plants` (0..1 density of hiding plants), `band: 'light'` (drums + bass only), and one of:
   `rhythm` (string), `parts` (array of 2 strings for duets), `gen` / `genParts` (random rhythm).
+- **Habitats**: `HABITATS` lists level ids in play order; `LEVELS` order doesn't matter for play,
+  only for the tests' level indices, so new levels go at the END of `LEVELS`. Levels marked
+  `draft: true` were written to fill Sunny Pond and Reed Marsh and await the teacher's review.
+  `learn: [[symbol, sentence]]` shows a newly introduced symbol (q h w ee qr hr wr 34) in the intro.
+  Sunny Pond (pop band) and Reed Marsh (folk band: stomp, plucked bass, banjo, washboard, fiddle
+  melody) are fully built; the other habitats hold the remaining levels with the Sunny look and
+  pop band, and their shops are "coming soon" (their flowers are saved). Tropical Lagoon has no levels.
+- **Rewards** (`rewards.js`): 1 flower per Perfect on a first clear, 1 per 2 Perfects on replays,
+  plus a +5..+20 bonus by position in the habitat; flowers are per habitat. Stars wallet = all
+  best stars minus `starsSpent`. Items: one of each; they snap into home `SLOTS` of their type.
+- **Save codes**: `CODE_LEVELS`, `CODE_HABITATS`, `ITEMS` and `SLOTS` orders are part of the code
+  format: only ever add to their ends. A new level must also be added to `CODE_LEVELS`.
 - **Rhythm strings**: tokens `w h q e` (notes) and `wr hr qr` (rests), measures split by `|`.
   Example: `'q q h | q qr q q | w'`. Two `e` on one beat are beamed automatically.
 - **Timing rules** (search "Timing leniency"): `EARLY_WIN 0.30 s`, `LATE_WIN 0.35 s`,
@@ -50,18 +66,24 @@ shared doc: "Ribbit Rhythm: Game Design Plan" on claude.ai. Ask the user for the
   `pickMelody()` makes the note each hop plays: chord tones, except that a weak note between two
   stronger notes (strong-weak-strong, e.g. `q q q`, `e e q`, `h q h` in 3/4) is often a passing
   note stepping from one chord tone to the next. The last note is C. No approach notes for now.
+  `planMelody()` composes the whole melody when a run is set up (`n.pitch` on each note), with a
+  generator seeded from the level id + rhythm: retries after an oopsie, replays and Listen first
+  all play the same tune; a re-randomized rhythm gets a new one.
   The bass walk-up into the next bar is left out of the last bar.
 - **Rendering**: canvas 1100x620 scaled to fit. `render()` draws background, a row of pads per
   part, frogs, fish, plants, fog, band, then the notation card (`drawNotation`, `drawPageLines`).
-- **Menus**: level map is an SVG pond (`buildMenu`), with HTML overlays for intro/results/settings.
+- **Menus**: the game opens on the current habitat's pond map (`buildMenu`, SVG). Buttons lead to
+  the world map, home and shop; HTML overlays for intro/results/settings/shop/home/save code.
 - **Practice mode** (Settings): never fails, records every key down/up against the beat, and
   offers "Copy timing log". Used to tune timing from real players.
 - **Saving**: localStorage only (`lilyRhythm.settings`, `lilyRhythm.progress`). Keep these key
-  names so players don't lose progress.
+  names so players don't lose progress. `progress` = `best`, `flowers`, `starsSpent`, `owned`,
+  `placed`, `habitat`; save codes move it between devices.
 
 ## Decisions already made (don't undo without asking)
 
 - The hop melody note plays exactly when the player taps (not snapped to the beat).
+- The same rhythm always gets the same melody (seeded), so retries and replays sound the same.
 - The full band plays from a one-bar intro; levels 1-3 use the lighter band.
 - "Listen first" (Grandpa Frog demo) shows counts (1, 2, &) instead of praise, and no combo.
 - Long notes: releasing before 55% of the note fails; 55-62% shows a gentle hint.
@@ -71,6 +93,9 @@ shared doc: "Ribbit Rhythm: Game Design Plan" on claude.ai. Ask the user for the
   with a swing!" after reaching land.
 - Art stays in the current code-drawn style (rounded shapes, pastel colours, dark outlines).
 - Touch screens show big tap pads (TAP, or L and R in duets); tapping anywhere also works.
+- Home decorating uses snap-in slots (no free drag for now).
+- A level that introduces a new symbol shows it drawn in its intro, with one short sentence.
+- Tall Grass (plants + eighths) lives in Firefly Bayou, where eighths are taught.
 
 ## Testing
 

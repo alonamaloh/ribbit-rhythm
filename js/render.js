@@ -4,7 +4,7 @@
 // ---------- band ----------
 function drawBand(b) {
   const y = H - 26, phase = ((b % 1) + 1) % 1, beatHit = Math.max(0, 1 - phase * 4);   // 1 right on the beat
-  const n = bandSize(), grooving = G && G.state === 'play';
+  const n = bandSize(), grooving = G && G.state === 'play', folk = !!G && habitatOf(G.L).band === 'folk';
   // the log stage
   ell(165, y + 10, 160, 20, '#8a5a35'); ell(165, y + 4, 156, 14, '#a8743f');
   ell(10, y + 8, 12, 18, '#c99a63'); ell(10, y + 8, 7, 11, '#a8743f');
@@ -15,7 +15,10 @@ function drawBand(b) {
   { const x = 52, on = n >= 1;
     drawFrog(x, y + bob(on), on ? { scale: 0.62, color: '#5aa84a', dark: '#3f8a35' } : { scale: 0.62, ...ghost });
     ctx.globalAlpha = on ? 1 : 0.4;
-    ctx.fillStyle = '#e0574f'; ctx.fillRect(x + 12, y - 22, 30, 22); ell(x + 27, y - 22, 15, 5, '#fff3e0'); ell(x + 27, y, 15, 5, '#c0453e');
+    if (folk) {   // a wooden stomp box (the frog taps it with a foot... well, a stick)
+      ctx.fillStyle = '#b98552'; ctx.strokeStyle = '#6b4520'; ctx.lineWidth = 2; ctx.fillRect(x + 12, y - 20, 30, 20); ctx.strokeRect(x + 12, y - 20, 30, 20);
+      ctx.beginPath(); ctx.moveTo(x + 12, y - 10); ctx.lineTo(x + 42, y - 10); ctx.stroke();
+    } else { ctx.fillStyle = '#e0574f'; ctx.fillRect(x + 12, y - 22, 30, 22); ell(x + 27, y - 22, 15, 5, '#fff3e0'); ell(x + 27, y, 15, 5, '#c0453e'); }
     if (on) { const sa = -0.9 + beatHit * 0.9; ctx.strokeStyle = '#6b4520'; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(x + 10, y - 26); ctx.lineTo(x + 10 + Math.cos(sa) * 20, y - 26 + Math.sin(sa) * 20); ctx.stroke(); }
     ctx.globalAlpha = 1; }
@@ -29,6 +32,14 @@ function drawBand(b) {
   // 🎤 two singing frogs
   for (let k = 0; k < 2 && n >= 3; k++) {   // (the lighter band of the first levels has no singers or hi-hat)
     const x = 196 + k * 34, on = n >= 3;
+    if (folk) {   // a banjo frog and a fiddle frog instead of singers
+      drawFrog(x, y + bob(on) * (k ? 0.6 : 1), { scale: 0.52, color: '#a8c45a', dark: '#87a03f' });
+      ctx.save(); ctx.translate(x + 6, y - 14); ctx.rotate(k ? -0.5 : -0.9 + (on ? Math.sin(phase * Math.PI * 2) * 0.08 : 0));
+      if (!k) { ctx.fillStyle = '#5a2e12'; ctx.fillRect(-1.5, -30, 3, 30); ell(0, 2, 10, 10, '#f3e6c8'); ctx.strokeStyle = '#8a5a35'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 2, 10, 0, Math.PI * 2); ctx.stroke(); }
+      else { ell(0, 0, 6, 9, '#a0522d'); ctx.fillStyle = '#5a2e12'; ctx.fillRect(-1, -20, 2, 12);
+        ctx.strokeStyle = '#6b4520'; ctx.lineWidth = 1.5; ctx.beginPath(); const bo = Math.sin(phase * Math.PI * 2) * 6; ctx.moveTo(-14 + bo, -8); ctx.lineTo(14 + bo, 6); ctx.stroke(); }
+      ctx.restore(); continue;
+    }
     drawFrog(x, y + bob(on) * (k ? 0.6 : 1), on ? { scale: 0.52, color: '#5ccfc0', dark: '#3aa597', mood: 'sing' } : { scale: 0.52, ...ghost });
     if (on) { ctx.fillStyle = '#7a4fc9'; ctx.font = '700 15px sans-serif'; ctx.textAlign = 'center';
       ctx.globalAlpha = 1 - ((phase + k * 0.5) % 1); ctx.fillText('♪', x + 8 + k * 6, y - 40 - ((phase + k * 0.5) % 1) * 16); ctx.globalAlpha = 1; }
@@ -36,11 +47,18 @@ function drawBand(b) {
   // ✨ hi-hat frog
   if (n >= 4) { const x = 292, on = n >= 4;
     ctx.globalAlpha = on ? 1 : 0.4; ctx.strokeStyle = '#6b6b6b'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(x - 20, y - 2); ctx.lineTo(x - 20, y - 34); ctx.stroke();
-    ell(x - 20, y - 36 + (on ? beatHit * 2 : 0), 13, 3, '#e8c547'); ell(x - 20, y - 32, 13, 3, '#d4b23a'); ctx.globalAlpha = 1;
+    if (folk) {   // a washboard and a spoon
+      ctx.fillStyle = '#c9ccd0'; ctx.fillRect(x - 32, y - 36, 22, 30); ctx.strokeStyle = '#8a5a35'; ctx.lineWidth = 3; ctx.strokeRect(x - 32, y - 36, 22, 30);
+      ctx.strokeStyle = '#9aa0a6'; ctx.lineWidth = 1.5; for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(x - 31, y - 32 + i * 4.5); ctx.lineTo(x - 11, y - 32 + i * 4.5); ctx.stroke(); }
+      ctx.strokeStyle = '#6b6b6b'; ctx.lineWidth = 2.5; const sp = (phase * 2 % 1) * 20; ctx.beginPath(); ctx.moveTo(x - 6, y - 34 + sp); ctx.lineTo(x - 22, y - 30 + sp); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(x - 20, y - 2); ctx.lineTo(x - 20, y - 34); ctx.stroke();
+      ell(x - 20, y - 36 + (on ? beatHit * 2 : 0), 13, 3, '#e8c547'); ell(x - 20, y - 32, 13, 3, '#d4b23a');
+    }
+    ctx.globalAlpha = 1;
     drawFrog(x, y + bob(on), on ? { scale: 0.5, color: '#c6dc4f', dark: '#9db53a' } : { scale: 0.5, ...ghost }); }
   ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.font = '800 12px ui-rounded, sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText('POND BAND', 165, H - 4);
+  ctx.fillText(folk ? 'MARSH BAND' : 'POND BAND', 165, H - 4);
 }
 
 // ---------- main draw ----------
@@ -55,7 +73,8 @@ function render() {
     CARD.h = 148;
     PPB = 130; VIEW_B = nowMs / 1000 * 0.4;
     drawBackground(0, nowMs / 1000);
-    for (let m = -2; m < 30; m += 2) drawReeds(m * 2 + Math.floor(VIEW_B / 4) * 4, false);
+    const every = 4 * theme().reedsEvery;
+    for (let m = -4; m < 40 / theme().reedsEvery; m++) drawReeds(m * every + Math.floor(VIEW_B / 4) * 4, false, theme().reedsEvery < 1 && m % 2 ? 1.3 : 1);
     drawFrog(sx(VIEW_B + 0.28), WATER_Y - 3 - Math.abs(Math.sin(nowMs / 400)) * 10, {});
     ctx.restore(); return;
   }
@@ -75,7 +94,9 @@ function render() {
   const nowS = nowMs / 1000;
 
   drawBackground(fog, nowS);
-  for (let m = 0; m <= G.measures; m++) drawReeds(m * G.beats - 0.05, night);
+  // reeds at every bar line (in the Reed Marsh, also halfway through each bar, and taller)
+  const re = theme().reedsEvery;
+  for (let k = 0; k <= G.measures / re; k++) drawReeds(k * G.beats * re - 0.05, night, re < 1 && k % 2 ? 1.3 : 1);
 
   drawShore(night);
 

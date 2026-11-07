@@ -5,7 +5,7 @@
 //  UI / overlays
 // =====================================================================
 const $ = id => document.getElementById(id);
-const overlays = ['menu', 'intro', 'results', 'settings'];
+const overlays = ['menu', 'intro', 'results', 'settings', 'world', 'shop', 'home', 'codes'];
 const isTouch = () => (navigator.maxTouchPoints || 0) > 0 || matchMedia('(pointer: coarse)').matches;
 function show(name) {
   overlays.forEach(o => $(o).classList.toggle('show', o === name));
@@ -60,11 +60,38 @@ function frogBadge(size, glasses) {
   return svg;
 }
 let mapFrogAt = 0, mapBusy = false;
+
+// A music symbol drawn on a short line, like on the notation card (for level intros)
+function symbolSVG(sym) {
+  const svg = document.createElementNS(SVGNS, 'svg'), wide = sym === 'ee';
+  svg.setAttribute('viewBox', `0 0 ${wide ? 100 : 80} 90`); svg.setAttribute('width', wide ? 100 : 80); svg.setAttribute('height', 90); svg.style.flex = 'none';
+  const ink = '#2b3a2e', y = 58, x = wide ? 36 : 36;
+  if (sym !== '34') S('line', { x1: 4, y1: y, x2: wide ? 96 : 76, y2: y, stroke: '#9aa49c', 'stroke-width': 2 }, svg);
+  const head = (hx, filled, whole) => S('ellipse', { cx: hx, cy: y, rx: whole ? 11 : 9.5, ry: whole ? 7.5 : 6.8, transform: whole ? '' : `rotate(-20 ${hx} ${y})`,
+    fill: filled ? ink : '#fff8ea', stroke: ink, 'stroke-width': whole ? 3.4 : 2.8 }, svg);
+  const stem = hx => S('line', { x1: hx + 8.5, y1: y - 2, x2: hx + 8.5, y2: y - 46, stroke: ink, 'stroke-width': 2.8, 'stroke-linecap': 'round' }, svg);
+  if (sym === 'q') { head(x, true); stem(x); }
+  else if (sym === 'h') { head(x, false); stem(x); }
+  else if (sym === 'w') head(x + 4, false, true);
+  else if (sym === 'ee') { head(26, true); stem(26); head(66, true); stem(66); S('rect', { x: 33, y: y - 48, width: 43, height: 8, fill: ink }, svg); }
+  else if (sym === 'qr') S('path', { d: `M${x},${y - 26} L${x + 9},${y - 15} L${x + 1},${y - 5} L${x + 9},${y + 6} Q${x - 4},${y + 1} ${x + 3},${y + 16}`,
+    fill: 'none', stroke: ink, 'stroke-width': 3.8, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, svg);
+  else if (sym === 'hr') S('rect', { x: x - 8, y: y - 9, width: 24, height: 9, fill: ink }, svg);    // sits on the line
+  else if (sym === 'wr') S('rect', { x: x - 8, y, width: 24, height: 9, fill: ink }, svg);           // hangs from the line
+  else if (sym === '34') for (const [t, ty] of [['3', 40], ['4', 82]]) S('text', { x: 40, y: ty, 'text-anchor': 'middle', 'font-size': 44, 'font-weight': 900, 'font-family': 'Georgia, serif', fill: ink }, svg, t);
+  return svg;
+}
+// where level i sits on its habitat's pond map
+const padXY = i => PAD_POS[Math.max(0, habitatOf(LEVELS[i]).levels.indexOf(LEVELS[i].id))];
+// level number as kids see it: its place in its habitat (1, 2, 3...)
+const levelNumber = i => habitatOf(LEVELS[i]).levels.indexOf(LEVELS[i].id) + 1;
 function buildMenu() {
+  const hab = currentHabitat(), th = themeOf(hab), ids = hab.levels;
+  if (!ids.includes(LEVELS[mapFrogAt].id)) mapFrogAt = levelIndex(ids[0]);
   const svg = $('pondmap'); svg.innerHTML = '';
   const defs = S('defs', {}, svg);
   const wg = S('radialGradient', { id: 'water', cx: '50%', cy: '45%', r: '75%' }, defs);
-  S('stop', { offset: '0%', 'stop-color': '#9be0dd' }, wg); S('stop', { offset: '100%', 'stop-color': '#4fa8b8' }, wg);
+  S('stop', { offset: '0%', 'stop-color': th.map[0] }, wg); S('stop', { offset: '100%', 'stop-color': th.map[1] }, wg);
   const blur = S('filter', { id: 'mist' }, defs); S('feGaussianBlur', { stdDeviation: 7 }, blur);
   S('rect', { x: 0, y: 0, width: W, height: H, fill: 'url(#water)' }, svg);
   // ripples, tiny decorative pads, reeds
@@ -83,32 +110,34 @@ function buildMenu() {
   S('rect', { x: 290, y: 12, width: 480, height: 86, rx: 20, fill: '#b98552', stroke: '#6b4520', 'stroke-width': 5 }, sign);
   S('rect', { x: 300, y: 22, width: 460, height: 66, rx: 14, fill: 'none', stroke: 'rgba(255,255,255,0.18)', 'stroke-width': 3 }, sign);
   svgFrog(sign, { cls: 'signFrog', transform: 'translate(352 52) scale(0.85)' });
-  S('text', { x: 553, y: 56, 'text-anchor': 'middle', 'font-size': 36, 'font-weight': 900, fill: '#fff8ea', stroke: '#6b4520', 'stroke-width': 1.5 }, sign, 'Ribbit Rhythm');
+  S('text', { x: 553, y: 56, 'text-anchor': 'middle', 'font-size': 36, 'font-weight': 900, fill: '#fff8ea', stroke: '#6b4520', 'stroke-width': 1.5 }, sign, hab.name);
   S('text', { x: 530, y: 82, 'text-anchor': 'middle', 'font-size': 15, 'font-weight': 700, fill: '#fde9c8' }, sign, 'Pick a lily pad to start hopping!');
   // stepping-stone trail through the pads (Catmull-Rom → Bézier)
-  let d = `M${PAD_POS[0][0]},${PAD_POS[0][1]}`;
-  for (let i = 0; i < PAD_POS.length - 1; i++) {
-    const p0 = PAD_POS[Math.max(0, i - 1)], p1 = PAD_POS[i], p2 = PAD_POS[i + 1], p3 = PAD_POS[Math.min(PAD_POS.length - 1, i + 2)];
+  const P = PAD_POS.slice(0, ids.length);
+  let d = `M${P[0][0]},${P[0][1]}`;
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[i + 1], p3 = P[Math.min(P.length - 1, i + 2)];
     d += ` C${p1[0] + (p2[0] - p0[0]) / 6},${p1[1] + (p2[1] - p0[1]) / 6} ${p2[0] - (p3[0] - p1[0]) / 6},${p2[1] - (p3[1] - p1[1]) / 6} ${p2[0]},${p2[1]}`;
   }
   S('path', { d, fill: 'none', stroke: 'rgba(255,255,255,0.75)', 'stroke-width': 7, 'stroke-linecap': 'round', 'stroke-dasharray': '1 22' }, svg);
   // the pads
-  LEVELS.forEach((L, i) => {
-    const [cx, cy] = PAD_POS[i], best = progress.best[L.id] || 0;
-    const g = S('g', { class: 'pad', tabindex: 0, role: 'button', 'aria-label': `Level ${i + 1}: ${L.name}` }, svg);
+  ids.forEach((id, k) => {
+    const i = levelIndex(id), L = LEVELS[i];
+    const [cx, cy] = PAD_POS[k], best = progress.best[L.id] || 0;
+    const g = S('g', { class: 'pad', tabindex: 0, role: 'button', 'aria-label': `Level ${k + 1}: ${L.name}` }, svg);
     const body = S('g', { class: 'padBody' }, g);
     S('ellipse', { cx, cy: cy + 6, rx: 50, ry: 36, fill: 'rgba(20,70,80,0.25)' }, body);
     const padCol = L.fog === 2 ? '#4f8f7c' : '#62b950', edge = L.fog === 2 ? '#2f6050' : '#3d8a3a';
-    S('path', { d: padPath(cx, cy, 46, -0.9 + i * 0.7), fill: padCol, stroke: edge, 'stroke-width': 3,
+    S('path', { d: padPath(cx, cy, 46, -0.9 + k * 0.7), fill: padCol, stroke: edge, 'stroke-width': 3,
       transform: `translate(${cx} ${cy}) scale(1 0.8) translate(${-cx} ${-cy})` }, body);   // slightly flattened circle
     for (let v = 0; v < 5; v++) {
-      const a = v * 1.25 + i;
+      const a = v * 1.25 + k;
       S('line', { x1: cx, y1: cy, x2: cx + Math.cos(a) * 34, y2: cy + Math.sin(a) * 26, stroke: 'rgba(255,255,255,0.18)', 'stroke-width': 2 }, body);
     }
     if (L.fog === 1) { S('ellipse', { cx: cx + 16, cy: cy - 4, rx: 38, ry: 17, fill: 'rgba(255,255,255,0.75)', filter: 'url(#mist)' }, body); }
     if (L.fog === 2) S('text', { x: cx + 32, y: cy - 16, 'font-size': 19, 'text-anchor': 'middle' }, body, '🌙');
     S('circle', { cx, cy, r: 18, fill: '#fff8ea', stroke: '#2b3a2e', 'stroke-width': 3 }, body);
-    S('text', { x: cx, y: cy + 7.5, 'text-anchor': 'middle', 'font-size': 21, 'font-weight': 900, fill: '#2f7a3a' }, body, String(i + 1));
+    S('text', { x: cx, y: cy + 7.5, 'text-anchor': 'middle', 'font-size': 21, 'font-weight': 900, fill: '#2f7a3a' }, body, String(k + 1));
     // stars as little flowers above the pad
     for (let k = 0; k < 3; k++)
       S('text', { x: cx - 22 + k * 22, y: cy - 42 - (k === 1 ? 5 : 0), 'text-anchor': 'middle', 'font-size': 20, fill: k < best ? '#ffcf33' : 'rgba(255,255,255,0.55)', stroke: k < best ? '#b8860b' : 'none', 'stroke-width': 1 }, g, '★');
@@ -122,9 +151,11 @@ function buildMenu() {
   });
   const frog = svgFrog(svg);
   placeMapFrog(frog, mapFrogAt, 0, 0);
+  const w = $('menuWallet'); w.innerHTML = ''; w.append(walletEl(hab.id));
+  $('btnShop').hidden = !hab.shop;
 }
 function placeMapFrog(frog, i, dx, lift) {
-  const [x, y] = PAD_POS[i];
+  const [x, y] = padXY(i);
   frog.setAttribute('transform', `translate(${x + 30 + dx} ${y - 8 - lift})`);
 }
 function pickPad(i) {
@@ -132,7 +163,7 @@ function pickPad(i) {
   const frog = document.querySelector('#pondmap .mapFrog');
   if (i === mapFrogAt || !frog) { openIntro(i); return; }
   mapBusy = true;
-  const [x0, y0] = PAD_POS[mapFrogAt], [x1, y1] = PAD_POS[i], t0 = performance.now();
+  const [x0, y0] = padXY(mapFrogAt), [x1, y1] = padXY(i), t0 = performance.now();
   const dist = Math.hypot(x1 - x0, y1 - y0), dur = 300 + Math.min(300, dist * 0.4);
   const step = now => {
     const p = Math.min(1, (now - t0) / dur), e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
@@ -149,11 +180,18 @@ function goMenu() { G = null; mode = 'menu'; buildMenu(); show('menu'); }
 function openIntro(i, keepRhythm) {
   selected = i; mapFrogAt = i;
   const L = LEVELS[i];
+  if (progress.habitat !== habitatOf(L).id) { progress.habitat = habitatOf(L).id; saveProgress(); }
   if (!keepRhythm || !pendingRhythm) pendingRhythm = L.genParts ? L.genParts.map(g => generate(g, L.beats || 4)) : L.gen ? generate(L.gen, L.beats || 4) : (L.parts || L.rhythm);
   G = makeRun(i, false, pendingRhythm); camB = -G.beats + 0.6;
   mode = 'intro';
-  $('introName').textContent = `${i + 1}. ${L.name}`;
+  $('introName').textContent = `${levelNumber(i)}. ${L.name}`;
   $('introMeta').textContent = `${L.concept} · ${fogLabel(L.fog)} · ${GUIDE_INFO[guideOf(L)]} · ${Math.round(L.bpm * settings.speed)} bpm`;
+  const learn = $('introLearn'); learn.innerHTML = '';
+  for (const [sym, text] of L.learn || []) {
+    const card = document.createElement('div'); card.className = 'learn';
+    const p = document.createElement('span'); p.textContent = text;
+    card.append(symbolSVG(sym), p); learn.append(card);
+  }
   $('introTip').textContent = L.tip + (isTouch() ? (isDuetLevel(L) ? ' On a touch screen, tap the blue L pad (bottom line) and the green R pad (top line).' : ' On a touch screen, tap the big lily pad in the corner (or anywhere).') : '');
   show('intro');
 }
@@ -186,6 +224,7 @@ function showResults() {
   if (!G || mode !== 'play') return;
   mode = 'results';
   const btns = $('resButtons'); btns.innerHTML = '';
+  document.querySelectorAll('#results .earned').forEach(e => e.remove());
   const add = (label, cls, fn) => { const b = document.createElement('button'); b.className = cls; b.textContent = label; b.onclick = fn; btns.appendChild(b); };
   $('results').querySelector('.panel').style.maxWidth = settings.practice && !G.demo ? '760px' : '';
   if (G.demo) {
@@ -216,13 +255,19 @@ function showResults() {
     const notes = G.events.filter(e => e.type === 'note');
     const perfect = notes.filter(e => e.judged === 'perfect').length, good = notes.length - perfect;
     const stars = G.fails === 0 ? (perfect / notes.length >= 0.5 ? 3 : 2) : (G.fails === 1 ? 2 : 1);
-    if (stars > (progress.best[G.L.id] || 0)) { progress.best[G.L.id] = stars; saveJSON('lilyRhythm.progress', progress); }
+    const won = awardRun(G.L, stars, perfect);
     $('resTitle').textContent = resultTitle(G.L, stars);
     $('resStars').textContent = starStr(stars);
     $('resStats').innerHTML = `<span>✨ Perfect: <b>${perfect}</b></span><span>👍 Good: <b>${good}</b></span><span>🐟 Oopsies: <b>${G.fails}</b></span>`;
+    // what this run earned
+    const earn = document.createElement('div'); earn.className = 'earned';
+    const fl = document.createElement('span'); fl.append(flowerIcon(26), ` +${won.flowers} ${won.hab.name} flowers`); earn.append(fl);
+    if (won.newStars) { const st = document.createElement('span'); st.innerHTML = `<b class="star">★</b> +${won.newStars} new star${won.newStars > 1 ? 's' : ''}!`; earn.append(st); }
+    $('resStats').after(earn);
     add('🔁 Again', 'soft', () => startPlay(false));
     if (G.L.gen || G.L.genParts) add('🎲 New rhythm', 'listen', () => { pendingRhythm = G.L.genParts ? G.L.genParts.map(g => generate(g, G.beats)) : generate(G.L.gen, G.beats); startPlay(false); });
-    if (selected < LEVELS.length - 1) add('Next level →', 'go', () => openIntro(selected + 1));
+    const ids = habitatOf(G.L).levels, nextId = ids[ids.indexOf(G.L.id) + 1];
+    if (nextId) add('Next level →', 'go', () => openIntro(levelIndex(nextId)));
     add('← Levels', 'soft', goMenu);
   }
   show('results');

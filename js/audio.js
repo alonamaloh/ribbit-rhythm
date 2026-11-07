@@ -159,4 +159,58 @@ const SND = {
     });
   },
   fanfare(t) { [72, 76, 79, 84].forEach((m, i) => SND.marimba(t + i * 0.12, m, 0.3)); SND.pad(t + 0.36, [60, 64, 67, 72], 1.2); },
+
+  // ---- Marsh Band (folk) instruments ----
+  // a plucked string (banjo, upright bass): a burst of noise that rings through a short delay loop
+  pluck(t, midi, v = 0.25, bright = 0.5) {
+    const key = 'pl' + midi + '_' + bright;
+    if (!plucks[key]) plucks[key] = pluckBuffer(midi, bright);
+    const s = AC.createBufferSource(), g = AC.createGain();
+    s.buffer = plucks[key]; g.gain.value = v;
+    s.connect(g); g.connect(master); s.start(t);
+  },
+  // a banjo strum: the chord's strings one after another, very quickly
+  strum(t, midis, v = 0.11, up = false) {
+    (up ? midis.slice().reverse() : midis).forEach((m, i) => SND.pluck(t + i * 0.013, m, v * (up ? 0.7 : 1), 0.85));
+  },
+  stomp(t, v = 0.5) {   // a foot on a wooden box
+    tone('sine', 120, t, 0.16, v, { f1: 48, glide: 0.08, a: 0.002 });
+    noise(t, 0.04, v * 0.35, 'bandpass', 420);
+  },
+  washboard(t, v = 0.07) {   // a spoon scraping the ridges: two quick scratches
+    noise(t, 0.035, v, 'bandpass', 3600); noise(t + 0.025, 0.03, v * 0.7, 'bandpass', 4300);
+  },
+  // the hop melody in the marsh: a fiddle with a quick bow start (so the beat stays clear) and a little vibrato
+  fiddle(t, midi, v = 0.32) {
+    const f = mtof(midi), o = AC.createOscillator(), lp = AC.createBiquadFilter(), bp = AC.createBiquadFilter(), g = AC.createGain();
+    o.type = 'sawtooth'; o.frequency.value = f;
+    const lfo = AC.createOscillator(), lg = AC.createGain(); lfo.frequency.value = 5.6;
+    lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(14, t + 0.25); lfo.connect(lg); lg.connect(o.detune);
+    lp.type = 'lowpass'; lp.frequency.value = 2600; bp.type = 'peaking'; bp.frequency.value = 1100; bp.gain.value = 6; bp.Q.value = 1.2;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v * 0.55, t + 0.012);
+    g.gain.setTargetAtTime(v * 0.32, t + 0.03, 0.08); g.gain.setTargetAtTime(0.0001, t + 0.32, 0.09);
+    o.connect(lp); lp.connect(bp); bp.connect(g); g.connect(master);
+    o.start(t); lfo.start(t); o.stop(t + 0.9); lfo.stop(t + 0.9);
+    SND.pluck(t, midi, v * 0.35, 0.9);   // a touch of pluck on top makes each note start crisply
+  },
 };
+// the instrument that plays the hop melody in each band style
+const LEAD = { pop: (t, m, v) => SND.marimba(t, m, v), folk: (t, m, v) => SND.fiddle(t, m, v) };
+
+const plucks = {};
+// Karplus-Strong: noise in a delay line one period long, averaged a little each time round (it dulls and fades like a real string)
+function pluckBuffer(midi, bright) {
+  const sr = AC.sampleRate, f = mtof(midi), n = Math.max(2, Math.round(sr / f));
+  const len = Math.round(sr * (midi < 48 ? 1.4 : 1.0)), out = new Float32Array(len), line = new Float32Array(n);
+  let prev = 0;
+  for (let i = 0; i < n; i++) { const r = Math.random() * 2 - 1; prev = prev + bright * (r - prev); line[i] = prev; }   // softer noise = warmer string
+  const keep = midi < 48 ? 0.998 : 0.994;
+  for (let i = 0, k = 0; i < len; i++, k = (k + 1) % n) {
+    const nx = line[(k + 1) % n]; out[i] = line[k];
+    line[k] = keep * 0.5 * (line[k] + nx);
+  }
+  let peak = 0; for (let i = 0; i < Math.min(len, n * 4); i++) peak = Math.max(peak, Math.abs(out[i]));
+  for (let i = 0; i < len; i++) out[i] /= peak || 1;
+  const b = AC.createBuffer(1, len, sr); b.getChannelData(0).set(out);
+  return b;
+}

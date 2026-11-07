@@ -18,12 +18,64 @@
     <div id="menuButtons">
       <button class="rock" id="btnSettings">⚙️ Settings</button>
     </div>
+    <div id="menuWallet"></div>
+    <div class="navButtons">
+      <button class="rock" id="btnWorld">🗺️ Habitats</button>
+      <button class="rock" id="btnHome">🏡 My home</button>
+      <button class="rock" id="btnShop">🛍️ Shop</button>
+    </div>
+  </div>
+
+  <div id="world" class="overlay">
+    <svg id="worldmap" viewBox="0 0 1100 620" width="1100" height="620"></svg>
+    <div class="navButtons"><button class="rock" id="btnWorldBack">← Back to the pond</button></div>
+  </div>
+
+  <div id="shop" class="overlay dim">
+    <div class="panel shopPanel">
+      <div class="shopHead"><h2 id="shopTitle">Shop</h2><div id="shopWallet"></div></div>
+      <div class="small" id="shopNote"></div>
+      <div id="shopGrid"></div>
+      <div>
+        <button class="soft" id="btnShopBack">← Back to the pond</button>
+        <button class="listen" id="btnShopHome">🏡 Go home</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="home" class="overlay">
+    <svg id="homeview" viewBox="0 0 1100 620" width="1100" height="620"></svg>
+    <div class="homeTitle" id="homeTitle">My Garden</div>
+    <div class="navButtons">
+      <button class="rock" id="btnHomeBack">← Back to the pond</button>
+      <button class="rock" id="btnHomeWorld">🗺️ Habitats</button>
+      <button class="rock" id="btnInOut">🚪 Go inside</button>
+      <button class="rock" id="btnHomeCode">🔑 Save code</button>
+    </div>
+    <div id="picker" class="panel" hidden>
+      <h2 id="pickTitle">What goes here?</h2>
+      <div id="pickList"></div>
+      <div><button class="soft" id="btnPutAway">Put it away</button><button class="go" id="btnPickClose">Done</button></div>
+    </div>
+  </div>
+
+  <div id="codes" class="overlay dim">
+    <div class="panel" style="width: 620px;">
+      <h2>Save code</h2>
+      <div class="tip">This code is your whole pond: stars, flowers and your home. Type it on another device to bring everything there.</div>
+      <div id="myCode" class="code"></div>
+      <button class="listen" id="btnCodeCopy">📋 Copy my code</button>
+      <div class="row codeRow"><input id="codeIn" placeholder="Have a code? Type it here" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="go" id="btnCodeLoad">Load this code</button></div>
+      <div class="small" id="codeMsg"></div>
+      <button class="soft" id="btnCodeDone">Done</button>
+    </div>
   </div>
 
   <div id="intro" class="overlay">
     <div class="panel">
       <h2 id="introName">Level</h2>
       <div class="small" id="introMeta"></div>
+      <div id="introLearn"></div>
       <div class="tip" id="introTip"></div>
       <div>
         <button class="listen" id="btnListen">👂 Listen first</button>
@@ -53,6 +105,7 @@
         <select id="setSpeed"><option value="0.8">🐢 Slow</option><option value="1">🐸 Normal</option><option value="1.2">🐇 Fast</option></select></div>
       <div class="row"><span>Reading guide</span>
         <select id="setGuide"><option value="auto">Grows with levels</option><option value="full">👀 Always show the line</option><option value="ears">👂 Ears only, every level</option></select></div>
+      <div class="row"><span>Save code<br><span class="small">Move your pond and home to another device.</span></span><button class="soft" id="btnSetCode">🔑 Save code</button></div>
       <button class="go" id="btnSetDone">Done</button>
     </div>
   </div>
@@ -60,6 +113,7 @@
 
 <script src="js/levels.js"></script>
 <script src="js/storage.js"></script>
+<script src="js/habitats.js"></script>
 <script src="js/rhythm.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/state.js"></script>
@@ -72,6 +126,12 @@
 <script src="js/render.js"></script>
 <script src="js/messages.js"></script>
 <script src="js/menus.js"></script>
+<script src="js/rewards.js"></script>
+<script src="js/world.js"></script>
+<script src="js/items.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/home.js"></script>
+<script src="js/savecode.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

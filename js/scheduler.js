@@ -13,6 +13,7 @@ function schedule() {
     // the intro bar (counting) uses the chord just before the measure we start on, so it leads right in
     const m = Math.floor(b / G.beats), ch = chordFor(m), nextCh = chordFor(m + 1);
     const band = bandSize(), spb = G.spb, waltz = G.beats === 3;
+    if (habitatOf(G.L).band === 'folk') { folkBand(at, b, h, inBar, m, ch, nextCh, band, spb, waltz); continue; }
     // 🥁 drums: rock beat in 4/4 (kick 1 & 3 + a pickup, snare 2 & 4); boom-chick-chick in 3/4
     if (band >= 1) {
       if (waltz) { if (isBeat && inBar === 0) SND.kick(at); if (isBeat && inBar > 0) SND.snare(at, 0.16); }
@@ -32,6 +33,28 @@ function schedule() {
     // ✨ hi-hats on every eighth, off-beats a little louder
     if (band >= 4) SND.hat(at, isBeat ? 0.04 : 0.065);
   }
+}
+
+// Marsh Band (folk): foot stomp, plucked upright bass ("boom"), banjo strums ("chuck") and a washboard
+function folkBand(at, b, h, inBar, m, ch, nextCh, band, spb, waltz) {
+  const isBeat = h % 2 === 0, last = m === G.measures - 1, r = ch[0];
+  // 🥾 stomp on the strong beats, a lighter one in between
+  if (band >= 1 && isBeat) {
+    SND.stomp(at, inBar === 0 || (!waltz && inBar === 2) ? 0.5 : 0.22);
+  }
+  // 🎻 upright bass: root and fifth, "boom" on the strong beats, a step into the next chord (not in the last bar)
+  if (band >= 2) {
+    const pat = waltz ? [[0, r]] : [[0, r], [2, r + 7]].concat(last ? [] : [[3.5, nextCh[0] + (nextCh[0] > r ? -1 : 1)]]);
+    for (const [pos, note] of pat) if (Math.abs(inBar - pos) < 1e-6) SND.pluck(at, note - 12, pos === 3.5 ? 0.35 : 0.5, 0.35);
+  }
+  // 🪕 banjo: strums on the off-beats ("boom-CHUCK"), a little up-strum before the next bar
+  if (band >= 3) {
+    const v = choirVoicing(ch).map(n => n + (n < 64 ? 12 : 0)).sort((a, c) => a - c);
+    if (isBeat && inBar > 0 && (waltz || inBar % 2 === 1)) SND.strum(at, v, 0.1);
+    if (!waltz && inBar === 3.5 && !last) SND.strum(at, v, 0.1, true);
+  }
+  // 🧺 washboard on every eighth, off-beats a little louder
+  if (band >= 4) SND.washboard(at, isBeat ? 0.035 : 0.06);
 }
 
 function demoDrive(t) {

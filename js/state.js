@@ -72,7 +72,7 @@ function makeRun(idx, demo, rhythmStr) {
   events.sort((a, b) => a.beat - b.beat || a.part - b.part);
   const np = strs.length;
   const bpm = L.bpm * settings.speed;
-  return {
+  const run = {
     L, idx, demo, beats, rhythmStr: strs.join('  ||  '), events, measures: parsed[0].measures, total: parsed[0].total, nparts: np,
     bpm, spb: 60 / bpm, ppb: L.ppb || 120,
     songStart: 0, startMeasure: 0, state: 'preview', log: [], practiceFlags: 0, keys: new Map(),
@@ -81,6 +81,8 @@ function makeRun(idx, demo, rhythmStr) {
     clumps: L.plants ? makeClumps(L, parsed[0].total, np) : null,
     pops: [], parts: [], fail: null, nextHalf: 0, melLast: [72, 55], melNote: [null, null], melPass: [null, null], doneT: 0,
   };
+  const was = G; G = run; planMelody(); G = was;   // every note gets its pitch now (melody.js)
+  return run;
 }
 const evT0 = e => G.songStart + e.beat * G.spb;
 const evT1 = e => G.songStart + (e.beat + e.dur) * G.spb;

@@ -25,11 +25,10 @@ let PPB = 130, VIEW_B = 0;
 const sx = beat => ANCHOR + (beat - (VIEW_B + OFF)) * PPB;
 
 function drawBackground(fog, nowS) {
-  const night = fog === 2;
+  const night = fog === 2, T = theme();   // T: the habitat's colours (night looks the same everywhere)
   const sky = ctx.createLinearGradient(0, 0, 0, WATER_Y);
   if (night) { sky.addColorStop(0, '#141c46'); sky.addColorStop(1, '#3d4c8c'); }
-  else if (fog === 1) { sky.addColorStop(0, '#bfdde8'); sky.addColorStop(1, '#eef7f6'); }
-  else { sky.addColorStop(0, '#9fdcff'); sky.addColorStop(1, '#ebfbff'); }
+  else { const c = fog === 1 ? T.fogSky : T.sky; sky.addColorStop(0, c[0]); sky.addColorStop(1, c[1]); }
   ctx.fillStyle = sky; ctx.fillRect(0, 0, W, WATER_Y + 2);
   const camPx = (VIEW_B + OFF) * PPB;
   if (night) {
@@ -39,7 +38,7 @@ function drawBackground(fog, nowS) {
     ctx.globalAlpha = 1;
     ell(960, 225, 34, 34, '#fff6d5'); ell(975, 215, 30, 30, '#3a4886');
   } else {
-    ell(965, 225, 38, 38, fog ? '#fff3c4' : '#ffe27a');
+    ell(965, 225, 38, 38, fog ? '#fff3c4' : T.sun);
     for (let i = 0; i < 5; i++) {
       const x = ((i * 300 - camPx * 0.08) % 1500 + 1500) % 1500 - 200, y = 190 + (i % 3) * 30;
       ctx.globalAlpha = fog ? 0.6 : 0.9;
@@ -48,7 +47,7 @@ function drawBackground(fog, nowS) {
     ctx.globalAlpha = 1;
   }
   // hills
-  const hillCols = night ? ['#26405a', '#2d5a52'] : ['#b2e2a4', '#8ccf7e'];
+  const hillCols = night ? ['#26405a', '#2d5a52'] : T.hills;
   [[0.15, 380, 260, 80, 520], [0.3, 410, 200, 60, 380]].forEach(([par, y, rx, ry, step], li) => {
     const off = ((camPx * par) % step + step) % step;
     for (let x = -step; x < W + step; x += step) ell(x - off, y + 30, rx, ry, hillCols[li]);
@@ -56,7 +55,7 @@ function drawBackground(fog, nowS) {
   // water
   const wg = ctx.createLinearGradient(0, WATER_Y, 0, H);
   if (night) { wg.addColorStop(0, '#22406a'); wg.addColorStop(1, '#0e1d3a'); }
-  else { wg.addColorStop(0, '#86d6dc'); wg.addColorStop(1, '#3f9fb6'); }
+  else { wg.addColorStop(0, T.water[0]); wg.addColorStop(1, T.water[1]); }
   ctx.fillStyle = wg; ctx.fillRect(0, WATER_Y, W, H - WATER_Y);
   ctx.strokeStyle = night ? 'rgba(180,200,255,0.18)' : 'rgba(255,255,255,0.45)'; ctx.lineWidth = 3; ctx.lineCap = 'round';
   [[WATER_Y + 28, 0.9], [WATER_Y + 62, 1.0], [WATER_Y + 104, 1.1], [WATER_Y + 150, 1.2]].forEach(([y, sp], i) => {
@@ -69,7 +68,7 @@ function drawBackground(fog, nowS) {
 function drawShore(night) {
   const x0 = sx(G.total + 0.3);
   if (x0 > W + 20) return;
-  const grass = night ? '#2f5a3f' : '#8fd468', grassDark = night ? '#244a33' : '#6fbf4f', dirt = night ? '#4a3a2c' : '#a8743f';
+  const grass = night ? '#2f5a3f' : theme().grass, grassDark = night ? '#244a33' : theme().grassDark, dirt = night ? '#4a3a2c' : '#a8743f';
   const top = WATER_Y - 24;
   ctx.beginPath();
   ctx.moveTo(x0 - 10, H); ctx.lineTo(x0 - 10, WATER_Y + 40);
@@ -94,11 +93,12 @@ function drawShore(night) {
   for (const [dx, dy, r] of [[-22, -60, 7], [6, -70, 6], [28, -56, 5], [-4, -52, 4]]) ell(hx + dx, hy + dy, r, r * 0.8, '#fff8ea');
 }
 
-function drawReeds(beatX, night) {
+function drawReeds(beatX, night, tall = 1) {
   const x = sx(beatX);
   if (x < -40 || x > W + 40) return;
   ctx.lineCap = 'round';
-  [[-8, 80, -0.08], [3, 98, 0.03], [12, 70, 0.1]].forEach(([dx, h, lean]) => {
+  [[-8, 80, -0.08], [3, 98, 0.03], [12, 70, 0.1]].forEach(([dx, h0, lean]) => {
+    const h = h0 * tall;
     ctx.strokeStyle = night ? '#3f6b4a' : '#5a9e48'; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.moveTo(x + dx, WATER_Y + 4); ctx.quadraticCurveTo(x + dx, WATER_Y - h / 2, x + dx + lean * h, WATER_Y - h); ctx.stroke();
     ell(x + dx + lean * h * 0.92, WATER_Y - h + 14, 4.5, 12, night ? '#5b4636' : '#8a5a35', lean);

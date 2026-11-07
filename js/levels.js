@@ -44,21 +44,27 @@ function chordFor(m) {
 }
 const choirVoicing = ch => ch.map(c => { let m = c; while (m < 60) m += 12; return m; }).sort((a, b) => a - b);
 
+// learn: new symbols a level introduces, shown in its intro: [symbol, one short sentence].
+// Symbols: q h w ee (two eighths) qr hr wr 34 (3/4 time).
 const LEVELS = [
   { id: 'l1', name: 'First Hops', concept: 'Quarter notes', bpm: 72, fog: 0, guide: 'full', band: 'light',
     rhythm: 'q q q q | q q q q | q q q q | q q q q',
+    learn: [['q', 'A quarter note is one beat.']],
     tip: 'Every note is a lily pad. Tap once for each note, right on the beat!' },
   { id: 'l2', name: 'Fishy Gaps', concept: 'Quarter rests', bpm: 76, fog: 0, guide: 'full', band: 'light',
     rhythm: 'q q q qr | q q qr q | q qr q q | qr q q q | q q qr q | q qr q qr | q q q q | q q q qr',
+    learn: [['qr', 'A quarter rest is one beat of silence.']],
     tip: 'A rest means a fish jumps by. Don’t tap. Just wait for it to pass!' },
   { id: 'l3', name: 'Long Lilies', concept: 'Half & whole notes', bpm: 76, fog: 0, guide: 'full', band: 'light',
     rhythm: 'h q q | q q h | h h | q qr h | w | q q q q | h h | w',
+    learn: [['h', 'A half note is as long as two quarter notes.'], ['w', 'A whole note is as long as four quarter notes.']],
     tip: 'Long notes are long pads. Tap and HOLD while the pad lights up, then lift your finger so you’re ready for the next note.' },
   { id: 'l4', name: 'Misty Morning', concept: 'Fog: read ahead', bpm: 80, fog: 1, guide: 'scroll',
     rhythm: 'q q h | q qr q q | h qr q | q q q qr | h h | q qr h | q q q q | w',
     tip: 'Fog! You can only see one pad ahead. Read the notes at the top.' },
   { id: 'l5', name: 'Big Fish', concept: 'Half rests', bpm: 80, fog: 1, guide: 'scroll',
     rhythm: 'q q hr | q q q q | hr q q | h hr | q qr q qr | hr h | q q q q | w',
+    learn: [['hr', 'A half rest is as long as two quarter rests.']],
     tip: 'A half rest is a BIG fish. Wait for two whole beats.' },
   { id: 'm1', name: 'Reed Maze', concept: 'Plants hide the pads', bpm: 78, fog: 0, guide: 'scroll', plants: 0.45,
     rhythm: 'q q h | q qr q q | hr q q | q q q qr | h q q | q qr hr | q q q q | w',
@@ -68,9 +74,11 @@ const LEVELS = [
     tip: 'It’s dark! Pads only appear when you land on them. Trust the notes. You get a new rhythm every time.' },
   { id: 'l7', name: 'Firefly Hops', concept: 'Eighth notes', bpm: 70, fog: 0, guide: 'full', ppb: 150,
     rhythm: 'q q e e q | e e e e q q | q e e h | e e q e e q | q q e e e e | h e e q | e e e e e e e e | w',
+    learn: [['ee', 'Two eighth notes are as long as one quarter note.']],
     tip: 'Two eighth notes share one beat: hop-hop! Count “1 &”.' },
   { id: 'l8', name: 'Lily Waltz', concept: '3/4 time', bpm: 96, fog: 1, guide: 'scroll', beats: 3,
     rhythm: 'q q q | h q | q qr q | h qr | q q q | q h | q qr qr | h qr',
+    learn: [['34', 'In 3/4 time, each measure has 3 beats.']],
     tip: '3/4 time has 3 beats in each measure. Count 1-2-3, 1-2-3 and waltz!' },
   { id: 'm2', name: 'Tall Grass', concept: 'Plants + eighths', bpm: 72, fog: 0, guide: 'scroll', ppb: 150, plants: 0.8,
     gen: { vocab: ['q', 'q', 'qr', 'h', 'ee', 'ee'], measures: 8 },
@@ -94,4 +102,30 @@ const LEVELS = [
   { id: 'd4', name: 'Duet Reading', concept: 'Duet sight-reading', bpm: 66, fog: 0, guide: 'page',
     genParts: [{ vocab: ['q', 'q', 'qr', 'h', 'hr'], measures: 8 }, { vocab: ['h', 'h', 'q', 'qr', 'hr'], measures: 8 }],
     tip: 'Read both lines, line by line, with no guide. Right hand (J) top, left hand (F) bottom. A new duet every time!' },
+  // ---- DRAFT levels, written to fill the habitats: for the teacher to check, change or remove ----
+  // (new levels go at the end so the tests' level numbers stay the same; habitats.js sets the play order)
+  // Sunny Pond
+  { id: 's1', name: 'Sunny Steps', concept: 'Notes and rests', bpm: 76, fog: 0, guide: 'full', draft: true,
+    rhythm: 'q q h | q qr q q | h h | qr q h | q q q q | h qr q | q q h | w',
+    tip: 'Quarter notes, long notes and rests, all together. Watch the line and count to 4!' },
+  { id: 's2', name: 'Sleepy Lilies', concept: 'No line: long notes', bpm: 76, fog: 0, guide: 'scroll', draft: true,
+    rhythm: 'w | h h | q qr h | w | h q q | qr q h | h h | w',
+    tip: 'No red line this time! Count the beats yourself and hold each long note all the way.' },
+  { id: 's3', name: 'Sunny Surprise', concept: 'Sight-reading', bpm: 76, fog: 1, guide: 'scroll', draft: true,
+    gen: { vocab: ['q', 'q', 'q', 'qr', 'h'], measures: 8 },
+    tip: 'A brand-new rhythm every time, in a light fog. Read the notes at the top!' },
+  // Reed Marsh
+  { id: 'r1', name: 'Heron Waits', concept: 'Whole rests', bpm: 78, fog: 0, guide: 'full', draft: true,
+    rhythm: 'q q h | wr | h q q | q qr q q | wr | q q h | hr q q | w',
+    learn: [['wr', 'A whole rest is as long as four quarter rests.']],
+    tip: 'A whole rest fills a whole measure: the biggest fish of all! Count 1 2 3 4 and wait.' },
+  { id: 'r2', name: 'Cattail Count', concept: 'Rests in the reeds', bpm: 78, fog: 0, guide: 'scroll', plants: 0.3, draft: true,
+    rhythm: 'q q hr | q q q qr | hr q q | h h | q qr q q | wr | h q q | w',
+    tip: 'Cattails hide a few pads, and there are big fish too. Read the rests at the top!' },
+  { id: 'r3', name: 'Muddy Paths', concept: 'Reading ahead', bpm: 80, fog: 1, guide: 'scroll', plants: 0.55, draft: true,
+    rhythm: 'h qr q | q q hr | qr q q q | h h | wr | q q q qr | hr h | w',
+    tip: 'Fog AND reeds! Read ahead in the notes so you always know what’s coming.' },
+  { id: 'r4', name: 'Marsh Reader', concept: 'Sight-reading rests', bpm: 78, fog: 0, guide: 'scroll', plants: 0.65, draft: true,
+    gen: { vocab: ['q', 'q', 'qr', 'h', 'hr'], measures: 8 },
+    tip: 'Most pads are hidden in the reeds, and the rhythm is new every time. Trust the notes!' },
 ];
