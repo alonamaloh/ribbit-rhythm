@@ -1,7 +1,7 @@
 // A habitat's shop: its own items (paid with its flowers) plus the star items.
 'use strict';
 
-const WHERE = { wall: 'for a wall', floor: 'for inside', rug: 'for the floor', lawn: 'for the garden', tree: 'for the garden' };
+const WHERE = { wall: 'for a wall', floor: 'for inside', rug: 'for the floor', lawn: 'for the garden', tree: 'for the garden', pond: 'for the pond' };
 
 function canAfford(item) { return item.shop === 'star' ? starsLeft() >= item.price : flowersIn(item.shop) >= item.price; }
 function buy(item) {
@@ -26,7 +26,8 @@ function buildShop(note) {
   const w = $('shopWallet'); w.innerHTML = ''; w.append(walletEl(hab.id));
   $('shopNote').textContent = note || 'Spend your flowers here. Star items are sold in every shop!';
   const grid = $('shopGrid'); grid.innerHTML = '';
-  for (const item of ITEMS.filter(it => it.shop === hab.id || it.shop === 'star')) {
+  // this habitat's own items first, star items at the end
+  for (const item of [...ITEMS.filter(it => it.shop === hab.id), ...ITEMS.filter(it => it.shop === 'star')]) {
     const card = document.createElement('div'); card.className = 'card' + (item.shop === 'star' ? ' starItem' : '');
     const name = document.createElement('div'); name.className = 'name'; name.textContent = item.name;
     const where = document.createElement('div'); where.className = 'small'; where.textContent = WHERE[item.slot];

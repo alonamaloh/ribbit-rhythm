@@ -173,6 +173,22 @@ const SND = {
   strum(t, midis, v = 0.11, up = false) {
     (up ? midis.slice().reverse() : midis).forEach((m, i) => SND.pluck(t + i * 0.013, m, v * (up ? 0.7 : 1), 0.85));
   },
+  // upright bass: a soft finger thump, then a round low note (a few gentle overtones so small
+  // speakers can still hear it) that fades quickly, like a plucked bass string
+  upright(t, midi, dur, v = 0.26) {
+    const f = mtof(midi), out = AC.createGain(), lp = AC.createBiquadFilter();
+    lp.type = 'lowpass'; lp.Q.value = 0.7;
+    lp.frequency.setValueAtTime(900, t); lp.frequency.exponentialRampToValueAtTime(320, t + 0.12);
+    out.gain.setValueAtTime(0.0001, t); out.gain.exponentialRampToValueAtTime(v, t + 0.008);
+    out.gain.setTargetAtTime(v * 0.4, t + 0.03, 0.12); out.gain.setTargetAtTime(0.0001, t + Math.max(0.1, dur * 0.85), 0.06);
+    for (const [mul, lvl, fade] of [[1, 1, 0], [2, 0.45, 0.25], [3, 0.18, 0.12]]) {
+      const o = AC.createOscillator(), og = AC.createGain(); o.type = 'sine'; o.frequency.value = f * mul;
+      og.gain.setValueAtTime(lvl, t); if (fade) og.gain.setTargetAtTime(lvl * 0.3, t, fade);   // overtones die away first
+      o.connect(og); og.connect(lp); o.start(t); o.stop(t + dur + 0.4);
+    }
+    lp.connect(out); out.connect(master);
+    noise(t, 0.03, v * 0.25, 'bandpass', 220);   // the finger on the string
+  },
   stomp(t, v = 0.5) {   // a foot on a wooden box
     tone('sine', 120, t, 0.16, v, { f1: 48, glide: 0.08, a: 0.002 });
     noise(t, 0.04, v * 0.35, 'bandpass', 420);

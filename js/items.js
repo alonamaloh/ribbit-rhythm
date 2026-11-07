@@ -2,8 +2,9 @@
 'use strict';
 
 // shop: the habitat whose flowers buy it, or 'star' (paid in stars, sold in every shop)
-// slot: the kind of spot it snaps into. Inside: 'wall', 'floor', 'rug'. Outside: 'lawn', 'tree'.
-// Each item is drawn around (0, 0): the middle of its bottom edge (wall items and rugs: their middle).
+// slot: the kind of spot it snaps into. Inside: 'wall', 'floor', 'rug'. Outside: 'lawn', 'tree', 'pond'.
+// Each item is drawn around (0, 0): the middle of its bottom edge (wall items and rugs: their middle;
+// pond items: where they meet the water).
 // IMPORTANT for save codes: only ever ADD items at the end of this list; never reorder or remove.
 const LN = { stroke: '#2b3a2e', 'stroke-width': 3, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' };
 const ITEMS = [
@@ -120,13 +121,53 @@ const ITEMS = [
     for (let i = 0; i < 7; i++) S('rect', { x: -56 + i * 9, y: -52, width: 4, height: 6, fill: '#1f1f25' }, g);
     S('text', { x: 40, y: -86, 'font-size': 22, fill: '#7a4fc9' }, g, '♪');
   } },
+  // ---- Pond items (they float) ----
+  { id: 'waterLily', name: 'Water lily', shop: 'sunny', price: 10, slot: 'pond', draw: g => {
+    S('path', { d: padPath(0, -2, 40, 1.2), transform: 'translate(0 -2) scale(1 0.42) translate(0 2)', fill: '#62b950', ...LN }, g);
+    for (let k = 0; k < 2; k++) for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3 + k * 0.5, r = k ? 7 : 11;
+      S('ellipse', { cx: Math.cos(a) * r, cy: -14 + Math.sin(a) * r * 0.5 - k * 6, rx: k ? 6 : 8, ry: k ? 9 : 11, transform: `rotate(${a * 57.3 + 90} ${Math.cos(a) * r} ${-14 + Math.sin(a) * r * 0.5 - k * 6})`, fill: k ? '#ffc4d4' : '#ff9fb8', stroke: '#2b3a2e', 'stroke-width': 1.5 }, g); }
+    S('circle', { cx: 0, cy: -20, r: 4.5, fill: '#ffe066', stroke: '#2b3a2e', 'stroke-width': 1.5 }, g);
+  } },
+  { id: 'duck', name: 'Little duck', shop: 'sunny', price: 20, slot: 'pond', draw: g => {
+    S('ellipse', { cx: 0, cy: 2, rx: 38, ry: 7, fill: 'rgba(255,255,255,0.5)' }, g);
+    S('path', { d: 'M-30,0 Q-34,-26 -6,-26 L18,-24 Q32,-24 30,-6 Q26,4 0,4 Q-26,4 -30,0 Z', fill: '#ffe066', ...LN }, g);
+    S('path', { d: 'M-30,-6 Q-40,-18 -30,-24', fill: '#ffe066', ...LN, 'stroke-width': 2.5 }, g);
+    S('circle', { cx: 14, cy: -40, r: 15, fill: '#ffe066', ...LN }, g);
+    S('path', { d: 'M27,-40 Q40,-40 38,-34 Q30,-31 26,-35 Z', fill: '#f39c3a', stroke: '#2b3a2e', 'stroke-width': 2 }, g);
+    S('circle', { cx: 18, cy: -44, r: 2.6, fill: '#1f2a22' }, g);
+    S('path', { d: 'M-12,-16 Q0,-6 10,-14', fill: 'none', stroke: '#e0b830', 'stroke-width': 3 }, g);
+  } },
+  { id: 'cattailIsland', name: 'Cattail island', shop: 'marsh', price: 25, slot: 'pond', draw: g => {
+    for (const [x, h] of [[-18, 70], [-4, 92], [10, 76], [22, 60]]) {
+      S('path', { d: `M${x},-6 Q${x - 2},${-6 - h / 2} ${x + 4},${-6 - h}`, stroke: '#5a8a3a', 'stroke-width': 4, fill: 'none', 'stroke-linecap': 'round' }, g);
+      S('ellipse', { cx: x + 3.5, cy: -6 - h + 13, rx: 5, ry: 12, fill: '#8a5a35', stroke: '#2b3a2e', 'stroke-width': 1.5 }, g); }
+    S('path', { d: 'M-44,2 Q-40,-16 0,-16 Q40,-16 44,2 Q0,10 -44,2 Z', fill: '#8a6a45', ...LN }, g);
+    S('path', { d: 'M-36,-6 Q0,-20 36,-6', stroke: '#6fbf4f', 'stroke-width': 6, fill: 'none', 'stroke-linecap': 'round' }, g);
+  } },
+  { id: 'rowboat', name: 'Rowboat', shop: 'marsh', price: 35, slot: 'pond', draw: g => {
+    S('line', { x1: -56, y1: -2, x2: -20, y2: -28, stroke: '#8a5a35', 'stroke-width': 5, 'stroke-linecap': 'round' }, g);
+    S('ellipse', { cx: -58, cy: 0, rx: 9, ry: 4, fill: '#a8743f', stroke: '#2b3a2e', 'stroke-width': 1.5 }, g);
+    S('path', { d: 'M-50,-30 L50,-30 Q44,6 0,6 Q-44,6 -50,-30 Z', fill: '#c98f55', ...LN }, g);
+    S('path', { d: 'M-48,-22 L48,-22', stroke: '#e0574f', 'stroke-width': 5 }, g);
+    S('rect', { x: -8, y: -36, width: 16, height: 8, rx: 2, fill: '#a8743f', stroke: '#2b3a2e', 'stroke-width': 2 }, g);
+    S('line', { x1: 44, y1: -2, x2: 16, y2: -28, stroke: '#8a5a35', 'stroke-width': 5, 'stroke-linecap': 'round' }, g);
+  } },
+  { id: 'swanBoat', name: 'Swan boat', shop: 'star', price: 15, slot: 'pond', draw: g => {
+    S('path', { d: 'M-50,-22 Q-58,4 0,4 Q48,4 50,-24 Q30,-14 -50,-22 Z', fill: '#fff', ...LN }, g);
+    S('path', { d: 'M-46,-24 Q-30,-46 -6,-26 Q-20,-34 -46,-24 Z', fill: '#f1f1f6', stroke: '#2b3a2e', 'stroke-width': 2 }, g);
+    S('path', { d: 'M40,-22 Q30,-60 44,-80 Q58,-94 64,-78', fill: 'none', stroke: '#2b3a2e', 'stroke-width': 13, 'stroke-linecap': 'round' }, g);
+    S('path', { d: 'M40,-22 Q30,-60 44,-80 Q58,-94 64,-78', fill: 'none', stroke: '#fff', 'stroke-width': 8, 'stroke-linecap': 'round' }, g);
+    S('path', { d: 'M63,-80 L78,-74 L63,-71 Z', fill: '#f39c3a', stroke: '#2b3a2e', 'stroke-width': 1.5 }, g);
+    S('circle', { cx: 56, cy: -82, r: 2.2, fill: '#1f2a22' }, g);
+    S('path', { d: 'M-20,-8 L20,-8', stroke: '#ffcf33', 'stroke-width': 4, 'stroke-linecap': 'round' }, g);
+  } },
 ];
 const itemById = id => ITEMS.find(it => it.id === id);
 
 // an item drawn on its own little SVG, for shop cards and the item picker
 function itemPreview(item, size = 110) {
   const svg = document.createElementNS(SVGNS, 'svg');
-  const box = { wall: '-60 -55 120 110', rug: '-130 -60 260 120', tree: '-110 -240 220 250', lawn: '-60 -140 120 150', floor: '-75 -130 150 140' }[item.slot];
+  const box = { wall: '-60 -55 120 110', rug: '-130 -60 260 120', tree: '-110 -240 220 250', pond: '-70 -96 150 104', lawn: '-60 -140 120 150', floor: '-75 -130 150 140' }[item.slot];
   svg.setAttribute('viewBox', box); svg.setAttribute('width', size); svg.setAttribute('height', size);
   item.draw(S('g', {}, svg));
   return svg;

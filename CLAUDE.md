@@ -49,7 +49,8 @@ shared doc: "Ribbit Rhythm: Game Design Plan" on claude.ai. Ask the user for the
   plus a +5..+20 bonus by position in the habitat; flowers are per habitat. Stars wallet = all
   best stars minus `starsSpent`. Items: one of each; they snap into home `SLOTS` of their type.
 - **Save codes**: `CODE_LEVELS`, `CODE_HABITATS`, `ITEMS` and `SLOTS` orders are part of the code
-  format: only ever add to their ends. A new level must also be added to `CODE_LEVELS`.
+  format: only ever add to their ends. A new level must also be added to `CODE_LEVELS`. Codes
+  (version 2) record how many items and spots they hold, so adding items or spots keeps old codes working.
 - **Rhythm strings**: tokens `w h q e` (notes) and `wr hr qr` (rests), measures split by `|`.
   Example: `'q q h | q qr q q | w'`. Two `e` on one beat are beamed automatically.
 - **Timing rules** (search "Timing leniency"): `EARLY_WIN 0.30 s`, `LATE_WIN 0.35 s`,
@@ -93,7 +94,8 @@ shared doc: "Ribbit Rhythm: Game Design Plan" on claude.ai. Ask the user for the
   with a swing!" after reaching land.
 - Art stays in the current code-drawn style (rounded shapes, pastel colours, dark outlines).
 - Touch screens show big tap pads (TAP, or L and R in duets); tapping anywhere also works.
-- Home decorating uses snap-in slots (no free drag for now).
+- Home decorating uses snap-in slots (no free drag for now). The garden: cottage on the left,
+  a pond on the right half with its own spots for floating items.
 - A level that introduces a new symbol shows it drawn in its intro, with one short sentence.
 - Tall Grass (plants + eighths) lives in Firefly Bayou, where eighths are taught.
 

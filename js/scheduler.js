@@ -44,8 +44,9 @@ function folkBand(at, b, h, inBar, m, ch, nextCh, band, spb, waltz) {
   }
   // 🎻 upright bass: root and fifth, "boom" on the strong beats, a step into the next chord (not in the last bar)
   if (band >= 2) {
-    const pat = waltz ? [[0, r]] : [[0, r], [2, r + 7]].concat(last ? [] : [[3.5, nextCh[0] + (nextCh[0] > r ? -1 : 1)]]);
-    for (const [pos, note] of pat) if (Math.abs(inBar - pos) < 1e-6) SND.pluck(at, note - 12, pos === 3.5 ? 0.35 : 0.5, 0.35);
+    // [position in the bar, note, length in beats]
+    const pat = waltz ? [[0, r, 2.8]] : [[0, r, 1.9], [2, r + 7, 1.4]].concat(last ? [] : [[3.5, nextCh[0] + (nextCh[0] > r ? -1 : 1), 0.45]]);
+    for (const [pos, note, d] of pat) if (Math.abs(inBar - pos) < 1e-6) SND.upright(at, note - 12, d * spb, pos === 3.5 ? 0.18 : 0.26);
   }
   // 🪕 banjo: strums on the off-beats ("boom-CHUCK"), a little up-strum before the next bar
   if (band >= 3) {

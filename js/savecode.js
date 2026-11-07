@@ -5,7 +5,9 @@
 const CODE_LEVELS = ['l1', 'l2', 'l3', 'l4', 'l5', 'm1', 'l6', 'l7', 'l8', 'm2', 'l9', 'd1', 'd2', 'd3', 'd4',
   's1', 's2', 's3', 'r1', 'r2', 'r3', 'r4'];
 const CODE_HABITATS = ['sunny', 'marsh', 'bayou', 'mountain', 'lagoon', 'moonlit'];
-const CODE_VERSION = 1;
+// version 2 stores how many items and spots it holds, so adding items or spots never breaks old codes.
+// Version 1 codes (before the pond items) had 16 items and 15 spots.
+const CODE_VERSION = 2, V1_ITEMS = 16, V1_SLOTS = 15;
 // letters and digits that are hard to mix up (no I, L, O, U)
 const ABC = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 for (const L of LEVELS) if (!CODE_LEVELS.includes(L.id)) console.warn(`Level ${L.id} is missing from CODE_LEVELS: its stars won't be in save codes`);
@@ -30,8 +32,8 @@ function makeSaveCode() {
   for (const id of CODE_LEVELS) w.put(progress.best[id] || 0, 2);
   for (const id of CODE_HABITATS) w.num(flowersIn(id));
   w.num(progress.starsSpent || 0);
-  for (const it of ITEMS) w.put(progress.owned[it.id] ? 1 : 0, 1);
-  for (const s of SLOTS) { const k = ITEMS.findIndex(it => it.id === progress.placed[s.id]); w.put(k < 0 ? 0 : 1, 1); if (k >= 0) w.num(k); }
+  w.num(ITEMS.length); for (const it of ITEMS) w.put(progress.owned[it.id] ? 1 : 0, 1);
+  w.num(SLOTS.length); for (const s of SLOTS) { const k = ITEMS.findIndex(it => it.id === progress.placed[s.id]); w.put(k < 0 ? 0 : 1, 1); if (k >= 0) w.num(k); }
   while (w.bits.length % 5) w.bits.push(0);
   let body = '';
   for (let i = 0; i < w.bits.length; i += 5) body += ABC[parseInt(w.bits.slice(i, i + 5).join(''), 2)];
@@ -48,13 +50,16 @@ function readSaveCode(text) {
   if (check(body) !== s.slice(0, 2)) return null;
   const bits = []; for (const c of body) { const v = ABC.indexOf(c); for (let i = 4; i >= 0; i--) bits.push((v >> i) & 1); }
   const r = bitsReader(bits);
-  if (r.get(3) !== CODE_VERSION) return null;
+  const ver = r.get(3);
+  if (ver !== 1 && ver !== 2) return null;
   const p = { best: {}, flowers: {}, starsSpent: 0, owned: {}, placed: {}, habitat: CODE_HABITATS[r.get(3)] || 'sunny' };
   for (const id of CODE_LEVELS) { const v = r.get(2); if (v) p.best[id] = v; }
   for (const id of CODE_HABITATS) { const v = r.num(); if (v) p.flowers[id] = v; }
   p.starsSpent = r.num();
-  for (const it of ITEMS) if (r.get(1)) p.owned[it.id] = true;
-  for (const sl of SLOTS) if (r.get(1)) { const it = ITEMS[r.num()]; if (it) p.placed[sl.id] = it.id; }
+  const nItems = ver === 1 ? V1_ITEMS : r.num();
+  for (let k = 0; k < nItems; k++) if (r.get(1) && ITEMS[k]) p.owned[ITEMS[k].id] = true;
+  const nSlots = ver === 1 ? V1_SLOTS : r.num();
+  for (let k = 0; k < nSlots; k++) if (r.get(1)) { const it = ITEMS[r.num()]; if (it && SLOTS[k]) p.placed[SLOTS[k].id] = it.id; }
   return p;
 }
 
