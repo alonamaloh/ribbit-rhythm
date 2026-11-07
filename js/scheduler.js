@@ -35,7 +35,25 @@ function schedule() {
   }
 }
 
-// Marsh Band (folk): foot stomp, plucked upright bass ("boom"), banjo strums ("chuck") and a washboard
+// Banjo rolls (Scruggs style): eight picks per bar, one per eighth note. Numbers are banjo strings:
+// 1 = highest fretted string ... 4 = lowest, 5 = the short high drone string (always open G).
+const BANJO_ROLLS = {
+  forwardReverse:   [3, 2, 1, 5, 1, 2, 3, 1],   // thumb-index-middle, then back down
+  forward:          [3, 2, 1, 5, 2, 1, 5, 1],
+  alternatingThumb: [3, 2, 5, 1, 4, 2, 5, 1],   // the thumb alternates between strings 3/4 and 5
+  backward:         [1, 2, 3, 1, 2, 3, 1, 2],
+};
+const ROLL_ORDER = ['forwardReverse', 'forward', 'alternatingThumb', 'forwardReverse'];   // one per bar, repeating
+const WALTZ_ROLL = [3, 2, 1, 5, 2, 1];   // 3/4: six picks per bar
+// Open-G tuning, strings 1-4 (D4 B3 G3 D3); each string plays the nearest chord note at or above it.
+const BANJO_OPEN = { 1: 62, 2: 59, 3: 55, 4: 50 }, BANJO_DRONE = 67;
+function banjoShape(ch) {
+  const shape = { 5: BANJO_DRONE };
+  for (const s of [1, 2, 3, 4]) { let m = BANJO_OPEN[s]; while (!isTone(m, ch)) m++; shape[s] = m; }
+  return shape;
+}
+
+// Marsh Band (folk): foot stomp, plucked upright bass ("boom"), banjo rolls and a washboard
 function folkBand(at, b, h, inBar, m, ch, nextCh, band, spb, waltz) {
   const isBeat = h % 2 === 0, last = m === G.measures - 1, r = ch[0];
   // 🥾 stomp on the strong beats, a lighter one in between
@@ -48,11 +66,14 @@ function folkBand(at, b, h, inBar, m, ch, nextCh, band, spb, waltz) {
     const pat = waltz ? [[0, r, 2.8]] : [[0, r, 1.9], [2, r + 7, 1.4]].concat(last ? [] : [[3.5, nextCh[0] + (nextCh[0] > r ? -1 : 1), 0.45]]);
     for (const [pos, note, d] of pat) if (Math.abs(inBar - pos) < 1e-6) SND.upright(at, note - 12, d * spb, pos === 3.5 ? 0.18 : 0.26);
   }
-  // 🪕 banjo: strums on the off-beats ("boom-CHUCK"), a little up-strum before the next bar
+  // 🪕 banjo: a roll on every eighth note; the last bar ends with a "pinch" (strings 5, 3 and 1 together)
   if (band >= 3) {
-    const v = choirVoicing(ch).map(n => n + (n < 64 ? 12 : 0)).sort((a, c) => a - c);
-    if (isBeat && inBar > 0 && (waltz || inBar % 2 === 1)) SND.strum(at, v, 0.1);
-    if (!waltz && inBar === 3.5 && !last) SND.strum(at, v, 0.1, true);
+    const shape = banjoShape(ch), k = Math.round(inBar * 2);
+    if (last) { if (k === 0) for (const s of [5, 3, 1]) SND.pluck(at, shape[s], 0.1, 0.85); }
+    else {
+      const roll = waltz ? WALTZ_ROLL : BANJO_ROLLS[ROLL_ORDER[((m % 4) + 4) % 4]];
+      SND.pluck(at, shape[roll[k]], isBeat ? 0.1 : 0.075, 0.85);   // picks on the beat a little stronger
+    }
   }
   // 🧺 washboard on every eighth, off-beats a little louder
   if (band >= 4) SND.washboard(at, isBeat ? 0.035 : 0.06);

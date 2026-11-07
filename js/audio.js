@@ -169,10 +169,6 @@ const SND = {
     s.buffer = plucks[key]; g.gain.value = v;
     s.connect(g); g.connect(master); s.start(t);
   },
-  // a banjo strum: the chord's strings one after another, very quickly
-  strum(t, midis, v = 0.11, up = false) {
-    (up ? midis.slice().reverse() : midis).forEach((m, i) => SND.pluck(t + i * 0.013, m, v * (up ? 0.7 : 1), 0.85));
-  },
   // upright bass: a soft finger thump, then a round low note (a few gentle overtones so small
   // speakers can still hear it) that fades quickly, like a plucked bass string
   upright(t, midi, dur, v = 0.26) {
